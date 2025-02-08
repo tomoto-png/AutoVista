@@ -1,0 +1,19 @@
+services:
+  app:
+    build: ./
+    volumes:
+      - .:/autovist
+    ports:
+      - 8002:8000
+  mysql:
+    image: mysql:8.3
+    ports:
+      - 3312:3306
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: carmysql
+      MYSQL_ROOT_PASSWORD: mysql0124
+      TZ: ${TZ}
+volumes:
+  mysql:
