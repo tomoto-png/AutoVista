@@ -30,11 +30,18 @@ class TopController extends Controller
         } else {
             $recommendedPosts = $this->getRandoms($page, $displayedIds);
         }
-        if ($request->filled('query')) {
+        if ($request->filled('query') || $request->filled('price_tag_id')){
             $query = $request->input('query');
-            $searchResults = CarGallery::where('title', 'LIKE', "%{$query}%")
-                ->orWhereHas('tags', function ($tagQuery) use ($query) {
-                    $tagQuery->where('tags.name', 'LIKE', "%{$query}%");
+            $priceTagId = $request->input('price_tag_id');
+            log::debug('検索クエリ: ' . $priceTagId);
+            $searchResults = CarGallery::when($query, function ($q) use ($query) {
+                    $q->where('title', 'LIKE', "%{$query}%")
+                    ->orWhereHas('tags', function ($tagQuery) use ($query) {
+                        $tagQuery->where('tags.name', 'LIKE', "%{$query}%");
+                    });
+                })
+                ->when($priceTagId, function ($q) use ($priceTagId) {
+                    $q->where('price_tag_id', $priceTagId);
                 })
                 ->withCount('likes')
                 ->orderByDesc('created_at')
@@ -44,6 +51,7 @@ class TopController extends Controller
             if ($request->ajax()) {
                 return response()->json($searchResults);
             }
+            Log::info('検索結果:', $searchResults->toArray());
 
             return view('top.index', compact('likedGalleries', 'searchResults', 'priceTags'));
         }
@@ -121,14 +129,13 @@ class TopController extends Controller
         $userId = Auth::id();
         $request->validate([
             'title' => 'required|max:255',
-            'image_path' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240',  // 10MB
             'price_tag_id' => 'required|exists:price_tags,id',
             'tags' => 'nullable|string',
-        ],[
-            'title.required' => '名前を入力してください。',
-            'title.string' => '名前は文字列で入力してください。',
-            'image_path.image' => '画像形式でアップロードしてください。',
-            'image_path.max' => '画像は2MB以内でアップロードしてください。',
+        ], [
+            'title.required' => 'タイトルを入力してください。',
+            'image.image' => '画像形式でアップロードしてください。',
+            'image.max' => '画像は10MB以内でアップロードしてください。',
             'price_tag_id.required' => '値段を選択してください。',
         ]);
         $imagePath = $request->file('image')->store('images', 'public');

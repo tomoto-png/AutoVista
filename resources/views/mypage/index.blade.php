@@ -13,121 +13,205 @@
             --bg-dark: #27262a;
             --bg-light-gray: #b8bcc3;
             --text-main: #0f131b;
-            --accent-color: #d1d1d5;
-            --button-hover: #c1c1c4;
+            --white: #ffffff;
+            --hover: #a1a5ab;
+            --bg-hover: #383b42;
         }
         button {
             text-underline-offset: 5px;
         }
+
+        h1 {
+            text-underline-offset: 10px;
+        }
     </style>
 </head>
-<body class="bg-[var(--bg-light-gray)] text-[var(--text-main)]">
-    <div class="flex items-center justify-center">
-        <a href="{{ route('top.index') }}" class="text-xl font-bold p-4">トップ</a>
-        <h1 class="text-xl font-bold p-4">マイページ</h1>
-    </div>
-    <div class="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-10">
-        <section class="text-center">
-            @if ($user->avatar)
-                <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full border-4 border-[var(--accent-color)] shadow-lg overflow-hidden">
-                    <img class="w-full h-full object-cover"
-                        src="{{ asset('storage/' . $user->avatar) }}"
-                        alt="{{ $user->name }}のアバター">
-                </div>
-            @else
-                <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center rounded-full bg-gray-300 text-2xl font-bold text-gray-700 shadow-lg">
-                    {{ $user->name ?? (string) $user->id }}
-                </div>
-            @endif
-
-            <h2 class="mt-4 text-lg font-semibold">{{ $user->name ?? (string) $user->id }}</h2>
-        </section>
-
-        <div class="flex mt-6">
-            <h3 class="text-lg font-semibold mb-2">自己紹介</h3>
-            <p class="text-gray-700 bg-gray-100 p-4 rounded-lg">
-                {{ $user->text ?? '自己紹介はまだ設定されていません。' }}
-            </p>
-            <a href="{{ route('mypage.edit') }}" class="inline-block bg-[var(--accent-color)] text-white px-6 py-2 rounded-full shadow hover:bg-[var(--button-hover)]">
-                プロフィール編集
-            </a>
+<body class="bg-[var(--bg-dark)] text-[var(--white)]">
+    <div class="max-w-5xl mx-auto relative">
+        <div class="flex items-center justify-center fixed top-0 left-0 w-full z-50 mt-5">
+            <a href="{{ route('top.index') }}" class="text-2xl font-bold p-4 hover:scale-105 opacity-60">おすすめ</a>
+            <h1 class="text-3xl font-bold p-4 hover:scale-105 underline">マイページ</h1>
         </div>
-        <h2>
-            <button id="togglePosts" class="underline">投稿一覧</button>
-            <button id="toggleLikes" class="opacity-70">いいね一覧</button>
-        </h2>
+        <div class="p-6 bg-[var(--bg-light-gray)] rounded-xl shadow-lg mt-40">
+            <section class="text-center">
+                @if ($user->avatar)
+                    <div class="w-32 h-32 sm:w-44 sm:h-44 mx-auto rounded-full border-4 border-[var(--accent-color)] shadow-lg overflow-hidden">
+                        <img class="w-full h-full object-cover"
+                            src="{{ asset('storage/' . $user->avatar) }}"
+                            alt="{{ $user->name }}のアバター">
+                    </div>
+                @else
+                    <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center rounded-full bg-gray-300 text-2xl font-bold text-[var(--text-main)] shadow-lg">
+                        {{ $user->name ?? (string) $user->id }}
+                    </div>
+                @endif
 
-        <div id="posts" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            @foreach($userPosts as $post)
-                <div class="p-2 border rounded-lg">
-                    <img src="{{ asset('storage/' . $post->image_path) }}" alt="画像" class="w-full h-64 object-cover">
-                    <form action="{{ route('mypage.destroy', $post->id) }}" method="POST" onsubmit="return confirm('本当に削除しますか？');" class="w-auto">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="">
-                            <img src="{{ asset('images/delete_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-7 h-7">
-                        </button>
-                    </form>
-                    <button class="openEdit" data-id="{{ $post->id }}">編集</button>
-                </div>
-            @endforeach
-        </div>
+                <h2 class="mt-4 text-2xl font-semibold text-[var(--text-main)]">{{ $user->name ?? (string) $user->id }}</h2>
+            </section>
 
-        <div id="likes" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" style="display: none;">
-            @foreach($likedPosts as $like)
-                <div class="p-4 border rounded-lg mb-4">
-                    <img src="{{ asset('storage/' . $like->image_path) }}" alt="画像" class="w-full h-64 object-cover">
-                    <button class="like-btn" data-gallery-id="{{ $like->id }}">
-                        @if(in_array($like->id, $likedGalleries))
-                            ❤️
-                        @else
-                            🤍
-                        @endif
-                    </button>
+            <div class="mt-6 p-6 bg-[var(--bg-dark)] shadow-md rounded-lg">
+                <div class="flex items-center justify-between mb-4 flex-wrap">
+                    <h3 class="text-2xl text-[var(--white)] font-semibold w-full sm:w-auto">自己紹介</h3>
+                    <div class="flex items-center ml-auto w-full sm:w-auto justify-between sm:justify-start">
+                        <a href="{{ route('mypage.edit') }}" class="inline-block text-lg bg-[var(--bg-light-gray)] text-[var(--text-main)] px-4 py-2 rounded-lg shadow-md hover:bg-[var(--hover)] transition-colors duration-300 w-full sm:w-auto mb-2 sm:mb-0 whitespace-nowrap">
+                            プロフィール編集
+                        </a>
+                        <!-- ログアウトボタンを右端に配置 -->
+                        <form action="{{ route('logout') }}" method="POST" class="inline ml-3 w-full sm:w-auto">
+                            @csrf
+                            <button type="submit" class="bg-red-400 text-lg text-white px-4 py-2 rounded-lg hover:bg-red-600 w-full sm:w-auto">
+                                ログアウト
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            @endforeach
-        </div>
-        <div id="editModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-            <div class="modal-content bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-lg font-bold mb-4">投稿編集</h3>
-                <form id="editForm" action="" method="POST"  enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1">タイトル</label>
-                        <input type="text" name="title" id="title" class="w-full border-gray-300 rounded p-2" placeholder="タイトルを入力">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1">画像</label>
-                        <input type="file" name="image" id="image" accept="image/*" class="w-full border-gray-300 rounded p-2">
-                        <div id="imagePreview" class="mt-2"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium">値段</label>
-                        <select name="price_tag_id" id="price_tag_id" class="w-full border-gray-300 rounded">
-                            <option value="">選択してください</option>
-                            @foreach($priceTags as $priceTag)
-                                <option value="{{ $priceTag->id }}" {{ old('price_tag_id') == $priceTag->id ? 'selected' : '' }}>
-                                    {{ $priceTag->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-4 relative">
-                        <label class="block text-sm font-medium mb-1">タグ</label>
-                        <input type="text" id="tagInput" name="tags" class="w-full border-gray-300 rounded p-2" placeholder="タグを入力" autocomplete="off">
-                        <div id="tagSuggestions" class="absolute w-full bg-white border border-gray-300 rounded hidden mt-1"></div>
-                    </div>
-                    <div id="selectedTagsContainer" class="mt-2 flex flex-wrap gap-2"></div>
-                    <div class="flex justify-end mt-4">
-                        <button type="button" id="closeEdit" class="mr-3 text-gray-500 hover:text-gray-700">キャンセル</button>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">投稿</button>
-                    </div>
-                </form>
+
+                <p class="text-[var(--text-main)] bg-[var(--white)] text-lg p-4 rounded-lg">
+                    {{ $user->text ?? '自己紹介はまだ設定されていません。' }}
+                </p>
             </div>
+            {{-- <form action="{{ route('mypage.index') }}" method="GET" class="mb-4 relative w-64 text-[var(--text-main)]">
+                <input type="text" id="query" name="query" placeholder="キーワード検索"
+                    class="border rounded px-2 py-1 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="{{ request('query') }}">
+
+                <div id="suggestions" class="hidden absolute bg-white border w-full rounded mt-1 shadow-lg z-10 max-h-36 overflow-y-auto text-sm z-1000"></div>
+                <select id="price_tag_id" name="price_tag_id"
+                    class="border rounded px-2 py-1 w-full text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">価格帯を選択</option>
+                    @foreach($priceTags as $priceTag)
+                        <option value="{{ $priceTag->id }}" {{ request('price_tag_id') == $priceTag->id ? 'selected' : '' }}>
+                            {{ $priceTag->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="bg-blue-500 text-white px-2 py-1 text-sm rounded hover:bg-blue-600">検索</button>
+                <a href="{{ route('mypage.index') }}" class="ml-2 text-gray-500 text-sm hover:text-gray-700">クリア</a>
+            </form> --}}
+            <h2 class="flex justify-center space-x-6 items-center text-[var(--text-main)] mt-6">
+                <button id="togglePosts" class="text-2xl font-medium focus:outline-none underline transition-all duration-300 hover:scale-105">投稿一覧</button>
+                <button id="toggleLikes" class="text-2xl font-medium opacity-70 focus:outline-none transition-all duration-300 hover:scale-105">いいね一覧</button>
+            </h2>
+
+            <div id="posts" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                @foreach($userPosts as $post)
+                    <!-- 画像を包むdivにrelativeとgroupクラスを追加 -->
+                    <div class="relative group">
+                        <img src="{{ asset('storage/' . $post->image_path) }}" alt="画像" class="w-full h-64 rounded-lg object-cover transition-all duration-300 group-hover:filter group-hover:brightness-50">
+                        <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
+                            <button class="openEdit" data-id="{{ $post->id }}">
+                                <img src="{{ asset('images/edit_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-6 h-6">
+                            </button>
+                            <form action="{{ route('mypage.destroy', $post->id) }}" method="POST" onsubmit="return confirm('本当に削除しますか？');" class="w-auto ml-2">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit">
+                                    <img src="{{ asset('images/delete_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-7 h-7">
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div id="likes" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" style="display: none;">
+                @foreach($likedPosts as $like)
+                    <div class="relative">
+                        <img src="{{ asset('storage/' . $like->image_path) }}" alt="画像" class="w-full h-64 rounded-lg image-thumbnail cursor-pointer object-cover" data-full="{{ asset('storage/' . $like->image_path) }}">
+                        <button class="like-btn absolute bottom-2 right-2" data-gallery-id="{{ $like->id }}">
+                            @if(in_array($like->id, $likedGalleries))
+                                ❤️
+                            @else
+                                🤍
+                            @endif
+                        </button>
+                    </div>
+                @endforeach
+            
+                <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+                    <div class="modal-content flex justify-center items-center w-full h-full">
+                        <img id="modal-image" src="" alt="拡大画像" class="w-[1200px] h-[800px] object-contain">
+                    </div>
+                </div>
+            </div>
+            <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="modal-content bg-[var(--bg-light-gray)] p-8 rounded-2xl shadow-2xl w-full max-w-3xl text-[var(--text-main)] relative">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">投稿編集</h3>
+                    <form id="editForm" action="" method="POST"  enctype="multipart/form-data" class="space-y-5">
+                        @csrf
+                        @method('PUT')
+                        <!-- 2カラムグリッドレイアウト -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            <!-- 左カラム: タイトル & 画像 -->
+                            <div class="space-y-4">
+                                <!-- タイトル入力 -->
+                                <div>
+                                    <input type="text" name="title" id="title"
+                                        class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                                        placeholder="タイトルを入力">
+                                </div>
+                                <!-- 値段選択 -->
+                                <div>
+                                    <select name="price_tag_id" id="price_tag_id"
+                                        class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                                        <option value="">値段を選択してください</option>
+                                        @foreach($priceTags as $priceTag)
+                                            <option value="{{ $priceTag->id }}" {{ old('price_tag_id') == $priceTag->id ? 'selected' : '' }}>
+                                                {{ $priceTag->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="bg-[var(--white)] relative w-64 h-64">
+                                        <!-- プレビュー表示エリア（アイコンの上に被せる） -->
+                                        <div id="imagePreview" class="absolute inset-0 hidden flex items-center justify-center z-10">
+                                            <img id="previewImage" src="" alt="プレビュー画像" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer">
+                                        </div>
+
+                                        <!-- アイコンボタン -->
+                                        <label for="image" class="cursor-pointer flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 transition z-20">
+                                            <img src="{{ asset('images/imag.svg') }}" alt="画像アップロード" class="w-12 h-12 opacity-70">
+                                            <span class="mt-2 text-base text-gray-600">画像を選択</span>
+                                            <input type="file" name="image" id="image" accept="image/*" class="hidden">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右カラム: 値段 & タグ -->
+                            <div class="space-y-4">
+                                <!-- タグ入力 -->
+                                <div class="relative">
+                                    <input type="text" id="tagInput" name="tags"
+                                        class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                                        placeholder="タグを入力(複数可能)" autocomplete="off">
+                                    <div id="tagSuggestions"
+                                        class="absolute w-full bg-white border border-gray-300 rounded-lg mt-1 hidden z-10 shadow-lg"></div>
+                                </div>
+
+                                <!-- 選択されたタグの表示 -->
+                                <div id="selectedTagsContainer" class="flex flex-wrap gap-2 mt-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- ボタン -->
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" id="closeEdit"
+                                class="px-4 py-2 text-lg rounded-lg bg-[var(--bg-dark)] text-[var(--white)] hover:bg-[var(--bg-hover)] transition">キャンセル</button>
+                            <button type="submit"
+                                class="px-6 py-2 text-lg bg-[var(--bg-dark)] text-[var(--white)] rounded-lg hover:bg-[var(--bg-hover)] transition shadow-md">更新</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="posts-pagination" data-next-url="{{ $userPosts->nextPageUrl() }}"></div>
+            <div id="likes-pagination" data-next-url="{{ $likedPosts->nextPageUrl() }}"></div>
         </div>
-        <div id="posts-pagination" data-next-url="{{ $userPosts->nextPageUrl() }}"></div>
-        <div id="likes-pagination" data-next-url="{{ $likedPosts->nextPageUrl() }}"></div>
+        <footer class="text-center py-4 text-white text-lg mt-20">
+            © 2025 Tomato
+        </footer>
     </div>
 
     <script>
@@ -140,6 +224,7 @@
             const selectedTagsContainer = document.getElementById("selectedTagsContainer");
             const editForm = document.querySelector('#editForm');
 
+            let selectedTagIndex = -1;
             let selectedTags = [];
             let currentGalleryId;
 
@@ -166,16 +251,23 @@
                         document.getElementById('title').value = data.title;
 
                         const imagePreview = document.getElementById('imagePreview');
-                        if (data.image_path) {
-                            const img = document.createElement('img');
-                            img.src = `/storage/${data.image_path}`;
-                            img.alt = '画像プレビュー';
-                            img.classList.add('w-32', 'h-32', 'object-cover', 'rounded-lg');
+                        const previewImage = document.getElementById('previewImage');
 
-                            imagePreview.innerHTML = '';
-                            imagePreview.appendChild(img);
+                        // 要素が存在するか確認
+                        if (imagePreview && previewImage) {
+                            // 画像がある場合の処理
+                            if (data.image_path) {
+                                previewImage.src = `/storage/${data.image_path}`;
+                                previewImage.alt = '画像プレビュー';
+                                previewImage.classList.add('w-full', 'h-full', 'object-cover', 'rounded-lg');
+                                imagePreview.classList.remove('hidden'); // 画像がある場合、プレビューを表示
+                            } else {
+                                previewImage.src = '';
+                                previewImage.alt = '画像がありません';
+                                imagePreview.classList.add('hidden'); // 画像がない場合は隠す
+                            }
                         } else {
-                            imagePreview.innerHTML = '画像がありません';
+                            console.error('画像プレビューエリアまたは画像要素が見つかりません');
                         }
 
                         const priceTagSelect = document.getElementById('price_tag_id');
@@ -198,25 +290,51 @@
                         console.error("Error fetching gallery data:", error);
                     });
             }
-
+            // 画像変更後の処理
             document.getElementById('image').addEventListener('change', function(event) {
-                const file = event.target.files[0];
+                const file = event.target.files[0];  // 画像ファイルを取得
 
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = '新しい画像プレビュー';
-                        img.classList.add('w-32', 'h-32', 'object-cover', 'rounded-lg');
-
+                        const previewImage = document.getElementById('previewImage');
                         const imagePreview = document.getElementById('imagePreview');
-                        imagePreview.innerHTML = '';
-                        imagePreview.appendChild(img);
+
+                        // 画像プレビュー要素が存在することを確認
+                        if (previewImage && imagePreview) {
+                            previewImage.src = e.target.result;  // プレビュー画像を更新
+                            imagePreview.classList.remove('hidden');  // プレビュー表示エリアを表示
+                        } else {
+                            console.error('画像プレビュー要素が見つかりません');
+                        }
                     };
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);  // ファイルを読み込む
                 }
             });
+
+            // 画像をクリックするとファイル選択ダイアログを開く
+            document.getElementById('previewImage').addEventListener('click', function() {
+                document.getElementById('image').click();  // input要素をクリックしてファイルダイアログを開く
+            });
+            function updateSelectedTags() {
+                selectedTagsContainer.innerHTML = "";
+                selectedTags.forEach(tag => {
+                    const tagItem = document.createElement("div");
+                    tagItem.textContent = tag;
+                    tagItem.classList.add("bg-[var(--bg-dark)]", "text-[--white]", "px-4", "py-2", "rounded-full", "text-lg", "m-1", "flex", "items-center");
+                    // 削除ボタン
+                    const removeButton = document.createElement("span");
+                    removeButton.textContent = " ×";
+                    removeButton.classList.add("ml-4", "cursor-pointer");
+                    removeButton.addEventListener("click", function() {
+                        selectedTags = selectedTags.filter(t => t !== tag);
+                        updateSelectedTags();
+                    });
+
+                    tagItem.appendChild(removeButton);
+                    selectedTagsContainer.appendChild(tagItem);
+                });
+            }
 
             // タグ候補を表示する
             function showTagSuggestions(input) {
@@ -232,7 +350,7 @@
                         tags.forEach(tag => {
                             const suggestion = document.createElement("div");
                             suggestion.textContent = tag.name;
-                            suggestion.classList.add("px-2", "py-1", "hover:bg-gray-200", "cursor-pointer");
+                            suggestion.classList.add("px-2", "py-1", "text-lg", "hover:bg-gray-200", "cursor-pointer");
                             suggestion.addEventListener("click", function() {
                                 addTag(tag.name);
                             });
@@ -249,8 +367,42 @@
                     tagSuggestions.classList.add("hidden");
                     return;
                 }
+                selectedTagIndex = -1;
                 showTagSuggestions(input);
             });
+
+            tagInput.addEventListener("keydown", function(event) {
+                const suggestionItems = tagSuggestions.children;
+
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (selectedTagIndex < suggestionItems.length - 1) {
+                        selectedTagIndex++;
+                        updateTagSelection(suggestionItems);
+                    }
+                } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (selectedTagIndex > 0) {
+                        selectedTagIndex--;
+                        updateTagSelection(suggestionItems);
+                    }
+                } else if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (selectedTagIndex >= 0 && selectedTagIndex < suggestionItems.length) {
+                        addTag(suggestionItems[selectedTagIndex].textContent);
+                    }
+                }
+            });
+
+            function updateTagSelection(items) {
+                Array.from(items).forEach((item, index) => {
+                    if (index === selectedTagIndex) {
+                        item.classList.add("bg-gray-200");
+                    } else {
+                        item.classList.remove("bg-gray-200");
+                    }
+                });
+            }
 
             function addTag(tag) {
                 if (!selectedTags.includes(tag)) {
@@ -267,12 +419,12 @@
                 selectedTags.forEach(tag => {
                     const tagItem = document.createElement("div");
                     tagItem.textContent = tag;
-                    tagItem.classList.add("bg-blue-500", "text-white", "p-2", "rounded", "m-1", "flex", "items-center");
+                    tagItem.classList.add("bg-[var(--bg-dark)]", "text-[--white]", "px-4", "py-2", "rounded-full", "text-lg", "m-1", "flex", "items-center");
 
                     // タグ削除ボタン
                     const removeButton = document.createElement("span");
                     removeButton.textContent = " ×";
-                    removeButton.classList.add("ml-2", "cursor-pointer");
+                    removeButton.classList.add("ml-4", "cursor-pointer");
                     removeButton.addEventListener("click", function() {
                         selectedTags = selectedTags.filter(t => t !== tag);
                         updateSelectedTags();
@@ -339,7 +491,7 @@
                 });
                 $(window).scroll(function() {
                     if (loading) return;
-                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 50) {
+                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 200) {
                         let nextPageLink = (currentTab === 'posts')
                             ? $('#posts-pagination').data('next-url')
                             : $('#likes-pagination').data('next-url');
@@ -357,16 +509,20 @@
                         if (currentTab === 'posts') {
                             data.userPosts.data.forEach(function(post) {
                                 const postHTML = `
-                                    <div class="p-2 border rounded-lg">
-                                        <img src="/storage/${post.image_path}" alt="画像" class="w-full h-64 object-cover">
-                                            <form action="/mypage/${post.id}" method="POST" onsubmit="return confirm('本当に削除しますか？');" class="w-auto">
+                                    <div class="group relative">
+                                        <img src="/storage/${post.image_path}" alt="画像" class="w-full h-64 rounded-lg object-cover transition-all duration-300 group-hover:filter group-hover:brightness-50">
+                                        <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-2 items-center">
+                                            <button class="openEdit" data-id="${post.id}">
+                                                <img src="/images/edit_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" class="w-7 h-7">
+                                            </button>
+                                            <form action="/mypage/${post.id}" method="POST" onsubmit="return confirm('本当に削除しますか？');" class="w-auto ml-2">
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <input type="hidden" name="_token" value="${csrfToken}">
-                                                <button type="submit" class="">
-                                                    <img src="/images/delete_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" class="w-7 h-7">
+                                                <button type="submit">
+                                                    <img src="/images/delete_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" class="w-6 h-6">
                                                 </button>
                                             </form>
-                                        <button class="openEdit" data-id="${post.id}">編集</button>
+                                        </div>
                                     </div>
                                 `;
                                 $('#posts').append(postHTML);
@@ -378,11 +534,11 @@
                                 const isLiked = likedGalleries.includes(like.id);
 
                                 const likeHTML = `
-                                    <div class="p-4 border rounded-lg mb-4">
-                                        <img src="/storage/${like.image_path}" alt="画像" class="w-full h-64 object-cover">
+                                    <div class="relative">
+                                        <img src="/storage/${like.image_path}" alt="画像" class="w-full h-64 rounded-lg cursor-pointer object-cover">
 
                                         <!-- いいねボタン -->
-                                        <button class="like-btn" data-gallery-id="${like.id}">
+                                        <button class="like-btn absolute bottom-2 right-2" data-gallery-id="${like.id}">
                                             ${isLiked ? '❤️' : '🤍'}
                                         </button>
                                     </div>
@@ -429,6 +585,23 @@
                             alert('エラーが発生しました');
                         }
                     });
+                });
+            });
+
+            $(document).ready(function() {
+                // サムネイル画像がクリックされた時
+                $('.image-thumbnail').on('click', function() {
+                    // data-full 属性から拡大画像のURLを取得
+                    var fullImageUrl = $(this).data('full');
+                    // モーダル内の画像に設定
+                    $('#modal-image').attr('src', fullImageUrl);
+                    // モーダルを表示
+                    $('#modal').removeClass('hidden');
+                });
+
+                // モーダル自体がクリックされた時にモーダルを非表示にする
+                $('#modal').on('click', function() {
+                    $(this).addClass('hidden');
                 });
             });
         });

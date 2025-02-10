@@ -24,6 +24,7 @@ return new class extends Migration
             ['name' => '500万から700万', 'created_at' => now(), 'updated_at' => now()],
             ['name' => '700万から900万', 'created_at' => now(), 'updated_at' => now()],
             ['name' => '900万以上', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'その他', 'created_at' => now(), 'updated_at' => now()]
         ]);
     }
 

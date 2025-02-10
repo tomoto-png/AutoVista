@@ -29,19 +29,19 @@
             <div class="w-1/2 hidden md:block relative">
                 <img src="{{ asset('images/car-b.svg') }}" alt="Background Image" class="w-full h-full object-cover">
                 <div class="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
-                <h2 class="absolute top-64 left-[78%]
-                    bg-white px-6 py-2 rounded-xl text-xl font-bold text-[var(--text-main)]">
+                <h2 class="absolute top-64 left-[75%]
+                    bg-white px-6 py-2 rounded-xl text-2xl font-bold text-[var(--text-main)]">
                     Login
                 </h2>
-                <a href="{{ route('register') }}" class="absolute top-52 left-[75%]
-                    px-6 py-2 text-xl font-bold text-white">
+                <a href="{{ route('register') }}" class="absolute top-52 left-[73%]
+                    px-6 py-2 text-2xl font-bold text-white">
                     register
                 </a>
             </div>
             <div class="w-full md:w-2/3 p-16 flex flex-col justify-center bg-white">
-                <h1 class="text-3xl text-center mb-10 mt-10 text-[var(--text-main)]">ログイン</h1>
+                <h1 class="text-4xl text-center mb-10 mt-10 text-[var(--text-main)]">ログイン</h1>
                 @if ($errors->has('login_error'))
-                <div class="text-red-500 text-center mb-4">
+                <div class="text-red-500 text-center text-base mb-4">
                     <ul>
                         <li>{{ $errors->first('login_error') }}</li>
                     </ul>
@@ -50,39 +50,42 @@
                 <form action="{{ route('login') }}" method="POST">
                     @csrf
                     <div class="mb-4">
-                        <label for="email" class="text-[var(--text-main)] text-base">メールアドレス</label>
+                        <label for="email" class="text-[var(--text-main)] text-lg">メールアドレス</label>
                         <div class="relative">
                             <img src="{{ asset('images/mail_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}"
                                 class="absolute top-1/2 left-3 transform -translate-y-[40%] w-6 h-6">
                             <input type="email" name="email" value="{{ old('email') }}"
-                                class="w-full px-10 py-3 mt-1 border {{ $errors->has('email') ? 'border-red-500' : 'border-[var(--bg-dark)]'}} rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] hover:scale-103 hover:shadow-lg transition-all duration-200"/>
+                                class="w-full px-10 py-3 mt-1 text-lg border {{ $errors->has('email') ? 'border-red-500' : 'border-[var(--bg-dark)]'}} rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] hover:scale-103 hover:shadow-lg transition-all duration-200"/>
                         </div>
                         @error('email')
-                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                            <div class="text-red-600 text-base mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-4 relative">
-                        <label for="password" class="text-[var(--text-main)] text-base">パスワード</label>
+                        <label for="password" class="text-[var(--text-main)] text-lg">パスワード</label>
                         <div class="relative">
                             <img src="{{ asset('images/lock_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}"
                                 class="absolute top-1/2 left-3 transform -translate-y-[40%] w-6 h-6">
                             <input type="password"  id="password" name="password" value="{{ old('password') }}"
-                                class="w-full px-10 py-3 mt-1 border {{ $errors->has('password') ? 'border-red-500' : 'border-[var(--bg-dark)]'}} rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] hover:scale-103 hover:shadow-lg transition-all duration-200"/>
+                                class="w-full px-10 py-3 mt-1 text-lg border {{ $errors->has('password') ? 'border-red-500' : 'border-[var(--bg-dark)]'}} rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] hover:scale-103 hover:shadow-lg transition-all duration-200"/>
                             <button type="button" id="toggle-password" class="absolute top-1/2 right-3 transform -translate-y-1/2">
                                 <img id="eye-icon" src="{{ asset('images/eye-slash-regular.svg') }}" alt="eye-icon" class="w-6 h-6 cursor-pointer">
                             </button>
                         </div>
                         @error('password')
-                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                            <div class="text-red-600 text-base mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                     <button type="submit"
                         class="text-[var(--text-main)] bg-[var(--accent-color)]
-                            shadow-xl py-3 text-xl w-full mt-10 mb-32 rounded-xl 
+                            shadow-xl py-3 text-lg w-full mt-10 mb-32 rounded-xl
                             hover:hover:bg-[var(--button-hover)]">
                         ログイン
                     </button>
                 </form>
+                <div class="flex justify-center">
+                    <a href="{{ route('top.index') }}" class="text-lg text-[var(--text-main)]">ログインなしで使用</a>
+                </div>
             </div>
         </div>
     </div>
