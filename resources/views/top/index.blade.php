@@ -43,13 +43,15 @@
             </a>
         </div>
         {{-- 投稿ボタン --}}
-        <button id="openModal"
-            class="right-6 bottom-6 duration-300 md:right-80 md:bottom-auto md:transform-none border-4 border-[var(--white)] p-3 rounded-xl shadow-lg fixed transition-all z-50 hover:bg-[var(--hover)]">
-            <img src="{{ asset('images/add_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="投稿" class="w-8 h-8">
-        </button>
+        @auth
+            <button id="openModal"
+                class="right-6 bottom-6 duration-300 md:right-80 md:bottom-auto md:transform-none border-4 border-[var(--white)] p-3 rounded-xl shadow-lg fixed transition-all z-50 hover:bg-[var(--hover)]">
+                <img src="{{ asset('images/add_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="投稿" class="w-8 h-8">
+            </button>
+        @endauth
         <div class="mt-40">
             {{-- 検索 --}}
-            <form action="{{ route('top.index') }}" method="GET" class="mb-4 relative flex items-center justify-center flex-wrap md:flex-nowrap">
+            <form action="{{ route('top.index') }}" method="GET" class="mb-4 relative flex items-center justify-center flex-wrap md:flex-nowrap"  id="searchForm">
                 <div class="flex border rounded-lg w-full max-w-2xl relative">
                     <input type="text" id="query" name="query" placeholder="キーワード検索"
                            class="border-none px-3 py-3 text-lg text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -62,7 +64,7 @@
                     <div class="border-r border-gray-300 h-full"></div>
 
                     <select id="price_tag_id" name="price_tag_id"
-                            class="border-none px-6 py-3 text-lg text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-36 truncate">
+                            class="border-none px-6 py-3 text-lg text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-36 truncate"  onchange="document.getElementById('searchForm').submit();">
                         <option value="">価格帯</option>
                         @foreach($priceTags as $priceTag)
                             <option value="{{ $priceTag->id }}" {{ request('price_tag_id') == $priceTag->id ? 'selected' : '' }}>
@@ -161,7 +163,7 @@
             </div>
             <div id="postList" class="mt-20 columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
                 @if(isset($searchResults))
-                    @foreach($searchResults as $post)
+                    @forelse($searchResults as $post)
                         <div class="break-inside-avoid rounded-lg overflow-hidden shadow-lg post relative group" data-gallery-id="{{ $post->id }}">
                             <img src="{{ asset('storage/' . $post->image_path) }}" alt="画像" class="w-full h-auto rounded-t-lg cursor-pointer image-thumbnail transition-all duration-300 group-hover:brightness-50" data-full="{{ asset('storage/' . $post->image_path) }}">
 
@@ -195,9 +197,11 @@
                                 </p>
                             @endauth
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-center text-white">該当する投稿はありません。</p>
+                    @endforelse
                 @else
-                    @foreach($recommendedPosts as $recommendedPost)
+                    @forelse($recommendedPosts as $recommendedPost)
                         <div class="break-inside-avoid rounded-lg overflow-hidden shadow-lg post relative group" data-gallery-id="{{ $recommendedPost->id }}">
                             <img src="{{ asset('storage/' . $recommendedPost->image_path) }}" alt="画像" class="w-full h-auto rounded-t-lg cursor-pointer image-thumbnail transition-all duration-300 group-hover:brightness-50" data-full="{{ asset('storage/' . $recommendedPost->image_path) }}">
                             <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 focus:outline-none opacity-0 group-hover:opacity-100 ">
@@ -228,7 +232,9 @@
                                 </p>
                             @endauth
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-center text-white">投稿がまだありません。</p>
+                    @endforelse
                 @endif
             </div>
             <!-- モーダル -->
@@ -247,9 +253,11 @@
         const postModal = document.getElementById('postModal');
         const closeModalButton = document.getElementById('closeModal');
 
-        openModalButton.addEventListener('click', function() {
-            postModal.classList.remove('hidden');
-        });
+        if (openModalButton) {
+            openModalButton.addEventListener('click', function() {
+                postModal.classList.remove('hidden');
+            });
+        }
 
         closeModalButton.addEventListener('click', function() {
             postModal.classList.add('hidden');
@@ -342,17 +350,21 @@
                     selectedTagsContainer.appendChild(tagItem);
                 });
             }
-
-            // Enterキーでタグを追加
             tagInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
-                    if (selectedTagIndex >= 0) {
-                        const tag = tagSuggestions.children[selectedTagIndex];
-                        addTag(tag.textContent);
+
+                    const suggestionItems = tagSuggestions.querySelectorAll("div");
+                    if (selectedTagIndex >= 0 && selectedTagIndex < suggestionItems.length) {
+                        const selectedTag = suggestionItems[selectedTagIndex].textContent.trim();
+                        addTag(selectedTag);
                     } else if (tagInput.value.trim() !== "") {
                         addTag(tagInput.value.trim());
                     }
+
+                    tagInput.value = "";
+                    tagSuggestions.classList.add("hidden");
+                    selectedTagIndex = -1;
                 }
             });
             // 矢印キーで候補を選択
@@ -444,8 +456,13 @@
                         }
                         likesCountElement.text(response.likes_count);
                     },
-                    error: function () {
-                        alert('エラーが発生しました');
+                    error: function(xhr) {
+                        if (xhr.status === 419 || xhr.status === 401) {
+                            alert('セッションが切れました。再度ログインしてください。');
+                            window.location.href = '/login';
+                        } else {
+                            alert('エラーが発生しました');
+                        }
                     }
                 });
             });
@@ -489,14 +506,20 @@
                     if (!loading) {
                         loading = true;
                         page++;
-                        const url = `/top?page=${page}&displayed_ids=${Array.from(displayedIds).join(',')}`;
 
+                        //URLのクエリパラメータとして page と displayed_idsを付け送信データとなる
+                        const query = document.querySelector('input[name="query"]')?.value || '';
+                        const priceTagId = document.querySelector('select[name="price_tag_id"]')?.value || '';
+
+                        const url = `/top?page=${page}&displayed_ids=${Array.from(displayedIds).join(',')}&query=${encodeURIComponent(query)}&price_tag_id=${priceTagId}`;
+                        //データ送信getデータなのでurlに
                         fetch(url, {
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json'
+                                'Accept': 'application/json'// 返ってくるデータはJSONの指定
                             }
                         })
+                        //戻り値
                         .then(response => response.json())
                         .then(posts => {
                             if (posts.length > 0) {
@@ -505,7 +528,7 @@
                                     displayedIds.add(post.id);
 
                                     const postElement = document.createElement('div');
-                                    postElement.classList.add('break-inside-avoid', 'rounded-lg', 'overflow-hidden', 'bg-white', 'shadow-lg', 'post', 'relative', 'group');
+                                    postElement.classList.add('break-inside-avoid', 'rounded-lg', 'overflow-hidden', 'shadow-lg', 'post', 'relative', 'group');
                                     postElement.dataset.galleryId = post.id;
 
                                     const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
@@ -513,7 +536,7 @@
 
                                     let likeButtonHtml = isLoggedIn
                                         ? `<button class="like-btn absolute bottom-2 right-2 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-gallery-id="${post.id}">${heart}</button>`
-                                        : `<p class="text-sm text-gray-500"><a href="{{ route('login') }}" class="underline">ログインでいいね</a></p>`;
+                                        : `<p class="text-sm text-white"><a href="{{ route('login') }}" class="underline">ログインでいいね</a></p>`;
 
                                     const tagsHtml = Array.isArray(post.tags) && post.tags.length > 0
                                         ? post.tags.map(tag => `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-lg text-sm">${tag.name}</span>`).join('')
@@ -666,6 +689,7 @@
             document.getElementById('closeButton').addEventListener('click', function() {
                 document.getElementById('query').value = '';
                 document.getElementById('price_tag_id').selectedIndex = 0;
+                document.getElementById('searchForm').submit();
             });
         });
     </script>

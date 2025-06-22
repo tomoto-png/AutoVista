@@ -26,11 +26,12 @@ class AuthController extends Controller
             'password.min' => 'パスワードは8文字以上である必要があります。',
             'password.confirmed' => 'パスワードが一致しません。',
         ]);
-        User::create([
+        $user = User::create([
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-        return redirect()->route('login')->with('success', '登録が完了しました！ログインをしてください。');
+        Auth::login($user);
+        return redirect()->route('top.index');
     }
     public function showLoginForm()
     {

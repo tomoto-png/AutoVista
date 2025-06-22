@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\CarGallery;
 use App\Models\Tag;
 use App\Models\Like;
-use Illuminate\Support\Facades\Log;
 use App\Models\Recommendation;
 use App\Models\PriceTag;
+use Illuminate\Support\Facades\DB;
 
 class TopController extends Controller
 {
@@ -17,11 +17,14 @@ class TopController extends Controller
     {
         $user = Auth::user();
         $likedGalleries = [];
+        //表示してるページ数を代入
         $page = $request->get('page', 1);
+
         $priceTags = PriceTag::all();
-        $displayedIds = $request->ajax()
-            ? array_map('intval', array_filter(explode(',', $request->get('displayed_ids', ''))))
+        $displayedIds = $request->ajax()//リクエストがAjax通信の判定
+            ? array_map('intval', array_filter(explode(',', $request->get('displayed_ids', ''))))//表示したidを取得,array_filter()で空の文字列をを削除, array_map('intval', ...)整数に変換
             : [];
+        //ログインしているか
         if ($user) {
             $recommendedPosts = $this->getRecommendeds($user, $page, $displayedIds);
             $likedGalleries = Like::where('user_id', $user->id)
@@ -30,10 +33,10 @@ class TopController extends Controller
         } else {
             $recommendedPosts = $this->getRandoms($page, $displayedIds);
         }
+
         if ($request->filled('query') || $request->filled('price_tag_id')){
             $query = $request->input('query');
             $priceTagId = $request->input('price_tag_id');
-            log::debug('検索クエリ: ' . $priceTagId);
             $searchResults = CarGallery::when($query, function ($q) use ($query) {
                     $q->where('title', 'LIKE', "%{$query}%")
                     ->orWhereHas('tags', function ($tagQuery) use ($query) {
@@ -43,6 +46,7 @@ class TopController extends Controller
                 ->when($priceTagId, function ($q) use ($priceTagId) {
                     $q->where('price_tag_id', $priceTagId);
                 })
+                ->skip(($page - 1) * 12)
                 ->withCount('likes')
                 ->orderByDesc('created_at')
                 ->limit(12)
@@ -51,15 +55,13 @@ class TopController extends Controller
             if ($request->ajax()) {
                 return response()->json($searchResults);
             }
-            Log::info('検索結果:', $searchResults->toArray());
 
             return view('top.index', compact('likedGalleries', 'searchResults', 'priceTags'));
         }
+
         if ($request->ajax()) {
-            Log::info('Infinite scroll IDs:', $recommendedPosts->pluck('id')->toArray());
             return response()->json($recommendedPosts);
         }
-        Log::info('初期表示投稿ID:', $recommendedPosts->pluck('id')->toArray());
         return view('top.index', compact('likedGalleries', 'recommendedPosts', 'priceTags'));
     }
 
@@ -73,23 +75,26 @@ class TopController extends Controller
             ->pluck('count', 'tag_id')
             ->toArray();
 
+        //いいねデータがない時はgetRandomsを表示
         if (empty($topTags)) {
             return $this->getRandoms($page, $displayedIds);
         }
         //四つのタグのカウント合計
         $totalCount = array_sum($topTags);
+
         $tagPostCounts = [];
-        //投稿数の比率計算
+        //投稿数の割合計算何件必要か
         foreach ($topTags as $tagId => $count) {
             $postCountForTag = (int) (($count / $totalCount) * 12);
             $tagPostCounts[$tagId] = max($postCountForTag, 1);
-            Log::info('Tag ID: ' . $tagId . ', Post Count: ' . $postCountForTag);
         }
 
-        $recommendedPosts = collect();
+        $recommendedPosts = collect();//Collection オブジェクト を空で初期化
+
+        //計算した投稿数に応じて投稿を取る
         foreach ($tagPostCounts as $tagId => $postCount) {
             $existingIds = $recommendedPosts->pluck('id')->toArray();
-            $excludeIds = array_merge($existingIds, $displayedIds);
+            $excludeIds = array_merge($existingIds, $displayedIds);//取得したidと表示したidを一つの配列に結合,重複の表示を防ぐ
             $postsForTag = CarGallery::whereHas('tags', function ($query) use ($tagId) {
                     $query->where('tags.id', $tagId);
                 })
@@ -97,10 +102,10 @@ class TopController extends Controller
                 ->withCount('likes')
                 ->limit($postCount)
                 ->get();
-            Log::info($postsForTag->pluck('id'));
             $recommendedPosts = $recommendedPosts->merge($postsForTag);
         }
-        $recommendedPosts = $recommendedPosts->unique('id');
+        $recommendedPosts = $recommendedPosts->unique('id');//同じ投稿が複数含まれている場合、1つだけ残す
+        //投稿が12件足りない時の処理
         if ($recommendedPosts->count() < 12) {
             $existingPostIds = $recommendedPosts->pluck('id')->toArray();
             $remainingCount = 12 - $recommendedPosts->count();
@@ -109,16 +114,16 @@ class TopController extends Controller
                 ->orderByDesc('id')
                 ->limit($remainingCount)
                 ->get();
-            Log::info($randomPosts->pluck('id'));
             $recommendedPosts = $recommendedPosts->merge($randomPosts);
         }
         return $recommendedPosts->shuffle();
     }
 
-    private function getRandoms($page = 1, $displayedIds = [])
+    //いいねがデータが足りないときやログインしてない時の表示用
+    private function getRandoms($page = 1)
     {
         return CarGallery::withCount('likes')
-            ->whereNotIn('id', $displayedIds)
+            ->orderBy('updated_at', 'desc')
             ->skip(($page - 1) * 12)
             ->limit(12)
             ->get();
@@ -138,23 +143,43 @@ class TopController extends Controller
             'image.max' => '画像は10MB以内でアップロードしてください。',
             'price_tag_id.required' => '値段を選択してください。',
         ]);
-        $imagePath = $request->file('image')->store('images', 'public');
-        $gallery = CarGallery::create([
-            'user_id' => $userId,
-            'title' => $request->title,
-            'image_path' => $imagePath,
-            'price_tag_id' => $request->price_tag_id,
-        ]);
-        if ($request->filled('tags')) {
-            $tagNames = explode(',', $request->tags);
+        try {
+            DB::transaction(function () use ($request, $userId) {
+                $imagePath = $request->file('image')->store('images', 'public');
 
-            foreach ($tagNames as $tagName) {
-                $cleanTagName = trim(mb_convert_kana($tagName, "as"));
+                $gallery = CarGallery::create([
+                    'user_id' => $userId,
+                    'title' => $request->title,
+                    'image_path' => $imagePath,
+                    'price_tag_id' => $request->price_tag_id,
+                ]);
 
-                $tag = Tag::firstOrCreate(['name' => $cleanTagName]);
-
-                $gallery->tags()->attach($tag->id);
+                if ($request->filled('tags')) {
+                    $tagNames = array_filter(array_map(function($tagName) {
+                        return trim(mb_convert_kana($tagName, "as"));
+                    }, explode(',', $request->tags)));
+                    // 既存のタグを一括取得
+                    $existingTags = Tag::whereIn('name', $tagNames)->get();
+                    $existingNames = $existingTags->pluck('name')->all();
+                    $newTagNames = array_diff($tagNames, $existingNames);
+                    $newTags = array_map(function($name) {
+                        return ['name' => $name, 'created_at' => now(), 'updated_at' => now()];
+                    }, $newTagNames);
+                    if (!empty($newTags)) {
+                        Tag::insert($newTags);
+                        $insertedTags = Tag::whereIn('name', $newTagNames)->get();
+                        $allTags = $existingTags->concat($insertedTags);
+                    } else {
+                        $allTags = $existingTags;
+                    }
+                    $gallery->tags()->attach($allTags->pluck('id')->all());
+                }
+            });
+        } catch (\Exception $e) {
+            if (!empty($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
             }
+            throw $e;
         }
         return redirect()->route('top.index');
     }

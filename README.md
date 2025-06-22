@@ -1,66 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AutoVist
+## アプリケーション概要
+- AutoVista（オートビスタ） は、車好きの方や、これから車の購入を考えている方のためのギャラリー共有アプリです。
+- ユーザーはお気に入りの車の写真を投稿・共有でき、他のユーザーと車の魅力を分かち合うことができます。
+- また、価格帯での絞り込み検索や、車の特徴を示すタグの追加機能により、理想の車を効率よく探すことができます。
+- 「見て楽しむ」だけでなく、「選んで探す」ことにも活用できる実用的なサービスです。
+## 使用技術スタック
+- フレームワーク: Laravel
+- データベース: Mysql
+- フロントエンド関連: JQuery
+- 開発: Docker, Git
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 主な機能
+### トップページ
+- 投稿の閲覧はログインなしでも可能です。
+- 投稿機能（画像とタグ付きで投稿可能）
+- 投稿一覧の表示（無限スクロール対応）
+- 価格帯での絞り込みと検索機能
+- おすすめ投稿の表示（「いいね」履歴のタグ集計による）
 
-## About Laravel
+### マイページ
+- ログインが必須です。
+- プロフィール編集（名前・自己紹介・アバター）
+- 自分の投稿一覧表示と編集・削除機能
+- 「いいね」した投稿の一覧表示
+- 無限スクロール対応
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 創意工夫
+- 全体の配色は黒と白を基調としており、背景を黒にすることで画像がより際立ち、鮮明に見えることを目指しています。
+- 	トップページではログインなしでも投稿を閲覧できるため、誰でも気軽に車の魅力に触れることができます。
+- トップページにはおすすめ機能があります。各投稿にはタグが付けられており、ユーザーが「いいね」した投稿のタグ情報とその出現回数を記録しています。おすすめ機能は、これらの出現回数をもとに関連性の高い投稿を優先的に表示する仕組みになっており、ユーザーの興味にマッチした投稿をより効率よく閲覧することができます
+- 投稿や編集時には、画像のプレビュー機能を実装しており、アップロード前に選択した画像を確認することができます。この機能により、誤った画像の投稿を防ぐことができ、ユーザーにとって安心して操作できる仕組みとなっています。
+- トップページとマイページには、無限スクロール機能を搭載しており、ページ遷移なしで投稿をスムーズに閲覧できます。
+## 実際のアプリケーション画像
+<table>
+    <tr>
+        <td>
+            新規登録ページ
+        </td>
+        <td>
+            ログインページ
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img width="1680" alt="Image" src="https://github.com/user-attachments/assets/32afd587-7d8f-4a00-b833-c9fad34fdce7" />
+        </td>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/834f1865-04a9-44df-b4fe-afeaab6c1e18" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            トップページ
+        </td>
+        <td>
+            トップページ（投稿モーダル表示時）
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/d6252704-4bc1-4a67-9236-58bf92db4fd3" />
+        </td>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/1dd02e19-3893-4de0-ad25-5c0565c18758" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            マイページ(投稿一覧)
+        </td>
+        <td>
+            マイページ(いいね一覧)
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/9ca521b4-e5b5-4f1c-99ba-171d04b00c04" />
+        </td>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/6050ecf3-a677-4033-86c0-f23008c77538" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            プロフィール編集ページ
+        </td>
+        <td>
+            マイページ（投稿モーダル表示時）
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/1d2a4495-1304-412d-8d98-ffb5dec55cc0" />
+        </td>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/9f74eae5-8f0e-417c-8a07-f8d4bb5315f5" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            未ログイン時の表示ページ
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img width="1440" alt="Image" src="https://github.com/user-attachments/assets/b905c0ec-5b11-4f1e-969f-3e6167657744" />
+        </td>
+    </tr>
+</table>

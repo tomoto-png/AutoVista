@@ -22,9 +22,9 @@
 
     <!-- メインコンテンツ -->
     <div class="flex justify-center items-center min-h-screen">
-        <div class="w-full max-w-md p-8 bg-[var(--bg-light-gray)] rounded-lg shadow-lg">
+        <div class="w-full max-w-lg p-8 bg-[var(--bg-light-gray)] rounded-lg shadow-lg">
             <!-- タイトル -->
-            <h1 class="text-2xl font-bold text-center mb-8">プロフィール編集</h1>
+            <h1 class="text-2xl font-bold text-center mb-4">プロフィール編集</h1>
 
             <!-- フォーム -->
             <form action="{{ route('mypage.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
@@ -32,7 +32,7 @@
                 @method('PUT')
 
                 <div class="flex justify-center">
-                    <div class="bg-transparent relative w-36 h-36 border-2 border-dashed border-gray-300 rounded-full">
+                    <div class="bg-transparent relative w-32 h-32 border border-dashed border-gray-300 rounded-full">
                         <div id="imagePreview" class="absolute inset-0 hidden flex items-center justify-center z-10">
                             <img id="previewImage" src="" alt="プレビュー画像" class="w-full h-full object-cover rounded-full shadow-md cursor-pointer">
                         </div>
@@ -60,21 +60,21 @@
                 <!-- 自己紹介 -->
                 <div>
                     <label for="text" class="block font-semibold text-lg mb-2">自己紹介</label>
-                    <textarea name="text" id="text" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] @error('text') border-red-500 @enderror">{{ old('text', $user->text) }}</textarea>
+                    <textarea name="text" id="text" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] @error('text') border-red-500 @enderror">{{ old('text', $user->text) }}</textarea>
                     @error('text')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="flex space-x-4">
+                <div class="flex space-x-4 justify-end">
                     <!-- キャンセルボタン -->
-                    <a href="{{ route('mypage.index') }}" class="w-1/2 text-center py-3 bg-[var(--bg-dark)] text-[var(--white)] rounded-md hover:bg-[var(--bg-hover)] transition duration-300">
+                    <a href="{{ route('mypage.index') }}" class="text-center bg-[var(--bg-dark)] text-[var(--white)] py-2 px-4 rounded-md hover:bg-[var(--bg-hover)] transition duration-300">
                         キャンセル
                     </a>
 
                     <!-- 更新ボタン -->
-                    <button type="submit" class="w-1/2 bg-[var(--bg-dark)] text-[var(--white)] py-3 rounded-md shadow-md hover:bg-[var(--bg-hover)] transition duration-300">
-                        更新
+                    <button type="submit" class="text-center bg-[var(--bg-dark)] text-[var(--white)] py-2 px-4 rounded-md shadow-md hover:bg-[var(--bg-hover)] transition duration-300">
+                        更新する
                     </button>
                 </div>
             </form>

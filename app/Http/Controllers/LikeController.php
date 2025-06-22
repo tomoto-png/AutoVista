@@ -16,27 +16,30 @@ class LikeController extends Controller
         $user = Auth::user();
         $galleryId = $request->input('car_gallery_id');
 
-        $like = Like::where('user_id', $user->id)->where('car_gallery_id', $galleryId)->first();
+        $like = Like::where('user_id', $user->id)
+                    ->where('car_gallery_id', $galleryId)
+                    ->first();
 
         if ($like) {
             $this->destoreRecommendations($user->id, $galleryId);
             $like->delete();
-            return response()->json([
-                'liked' => false,
-                'likes_count' => CarGallery::find($galleryId)->likes()->count()
-            ]);
+            $liked = false;
         } else {
             Like::create([
                 'user_id' => $user->id,
                 'car_gallery_id' => $galleryId,
             ]);
             $this->storeRecommendations($user->id, $galleryId);
-
-            return response()->json([
-                'liked' => true,
-                'likes_count' => CarGallery::find($galleryId)->likes()->count()
-            ]);
+            $liked = true;
         }
+
+        $likesCount = Like::where('car_gallery_id', $galleryId)->count();
+
+        return response()->json([
+            'liked' => $liked,
+            'likes_count' => $likesCount,
+        ]);
+
     }
 
     private function storeRecommendations($userId, $galleryId)

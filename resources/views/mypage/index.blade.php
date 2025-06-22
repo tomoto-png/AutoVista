@@ -70,24 +70,6 @@
                     {{ $user->text ?? '自己紹介はまだ設定されていません。' }}
                 </p>
             </div>
-            {{-- <form action="{{ route('mypage.index') }}" method="GET" class="mb-4 relative w-64 text-[var(--text-main)]">
-                <input type="text" id="query" name="query" placeholder="キーワード検索"
-                    class="border rounded px-2 py-1 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value="{{ request('query') }}">
-
-                <div id="suggestions" class="hidden absolute bg-white border w-full rounded mt-1 shadow-lg z-10 max-h-36 overflow-y-auto text-sm z-1000"></div>
-                <select id="price_tag_id" name="price_tag_id"
-                    class="border rounded px-2 py-1 w-full text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">価格帯を選択</option>
-                    @foreach($priceTags as $priceTag)
-                        <option value="{{ $priceTag->id }}" {{ request('price_tag_id') == $priceTag->id ? 'selected' : '' }}>
-                            {{ $priceTag->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <button type="submit" class="bg-blue-500 text-white px-2 py-1 text-sm rounded hover:bg-blue-600">検索</button>
-                <a href="{{ route('mypage.index') }}" class="ml-2 text-gray-500 text-sm hover:text-gray-700">クリア</a>
-            </form> --}}
             <h2 class="flex justify-center space-x-6 items-center text-[var(--text-main)] mt-6">
                 <button id="togglePosts" class="text-2xl font-medium focus:outline-none underline transition-all duration-300 hover:scale-105">投稿一覧</button>
                 <button id="toggleLikes" class="text-2xl font-medium opacity-70 focus:outline-none transition-all duration-300 hover:scale-105">いいね一覧</button>
@@ -118,16 +100,26 @@
                 @foreach($likedPosts as $like)
                     <div class="relative">
                         <img src="{{ asset('storage/' . $like->image_path) }}" alt="画像" class="w-full h-64 rounded-lg image-thumbnail cursor-pointer object-cover" data-full="{{ asset('storage/' . $like->image_path) }}">
+                        <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1">
+                            <img src="{{ asset('images/more_horiz_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-5 h-5">
+                        </button>
+
+                        <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
+                            <p class="font-semibold text-sm text-gray-600 mb-2">{{ $like->title }}</p>
+                            <p class="text-gray-600 text-sm mb-2">{{ $like->priceTag->name ?? '値段未設定' }}</p>
+                            <p class="text-gray-600 text-sm mb-2">{{ $like->likes_count }} いいね</p>
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($like->tags as $tag)
+                                    <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-lg text-sm">{{ $tag->name }}</span>
+                                @endforeach
+                            </div>
+                        </div>
                         <button class="like-btn absolute bottom-2 right-2" data-gallery-id="{{ $like->id }}">
-                            @if(in_array($like->id, $likedGalleries))
-                                ❤️
-                            @else
-                                🤍
-                            @endif
+                            ❤️
                         </button>
                     </div>
                 @endforeach
-            
+
                 <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
                     <div class="modal-content flex justify-center items-center w-full h-full">
                         <img id="modal-image" src="" alt="拡大画像" class="w-[1200px] h-[800px] object-contain">
@@ -371,39 +363,6 @@
                 showTagSuggestions(input);
             });
 
-            tagInput.addEventListener("keydown", function(event) {
-                const suggestionItems = tagSuggestions.children;
-
-                if (event.key === "ArrowDown") {
-                    event.preventDefault();
-                    if (selectedTagIndex < suggestionItems.length - 1) {
-                        selectedTagIndex++;
-                        updateTagSelection(suggestionItems);
-                    }
-                } else if (event.key === "ArrowUp") {
-                    event.preventDefault();
-                    if (selectedTagIndex > 0) {
-                        selectedTagIndex--;
-                        updateTagSelection(suggestionItems);
-                    }
-                } else if (event.key === "Enter") {
-                    event.preventDefault();
-                    if (selectedTagIndex >= 0 && selectedTagIndex < suggestionItems.length) {
-                        addTag(suggestionItems[selectedTagIndex].textContent);
-                    }
-                }
-            });
-
-            function updateTagSelection(items) {
-                Array.from(items).forEach((item, index) => {
-                    if (index === selectedTagIndex) {
-                        item.classList.add("bg-gray-200");
-                    } else {
-                        item.classList.remove("bg-gray-200");
-                    }
-                });
-            }
-
             function addTag(tag) {
                 if (!selectedTags.includes(tag)) {
                     selectedTags.push(tag);
@@ -413,7 +372,7 @@
                 tagSuggestions.classList.add("hidden");
             }
 
-            // 選択されたタグの表示を更新
+                        // 選択されたタグの表示を更新
             function updateSelectedTags() {
                 selectedTagsContainer.innerHTML = "";
                 selectedTags.forEach(tag => {
@@ -435,11 +394,46 @@
                 });
             }
 
+            tagInput.addEventListener("keydown", function(event) {
+                const suggestionItems = tagSuggestions.children;
+
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (selectedTagIndex < suggestionItems.length - 1) {
+                        selectedTagIndex++;
+                        updateTagSelection(suggestionItems);
+                    }
+                } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (selectedTagIndex > 0) {
+                        selectedTagIndex--;
+                        updateTagSelection(suggestionItems);
+                    }
+                } else if (event.key === "Enter") {
+                    if (selectedTagIndex >= 0 && selectedTagIndex < suggestionItems.length) {
+                        addTag(suggestionItems[selectedTagIndex].textContent);
+                    }
+                }
+            });
+
+            function updateTagSelection(items) {
+                Array.from(items).forEach((item, index) => {
+                    if (index === selectedTagIndex) {
+                        item.classList.add("bg-gray-200");
+                    } else {
+                        item.classList.remove("bg-gray-200");
+                    }
+                });
+            }
+
             // Enterキーでタグ追加またフォームの送信制約
             tagInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
-                    if (tagInput.value.trim() !== "") {
+                    if (selectedTagIndex >= 0) {
+                        const tag = tagSuggestions.children[selectedTagIndex];
+                        addTag(tag.textContent);
+                    } else if (tagInput.value.trim() !== "") {
                         addTag(tagInput.value.trim());
                     }
                 }
@@ -475,6 +469,7 @@
                 $("#togglePosts").click(function() {
                     $("#posts").show();
                     $("#likes").hide();
+                    fetchPosts('user');
                     currentTab = 'posts';
 
                     $(this).removeClass("opacity-50").addClass("underline");
@@ -528,18 +523,14 @@
                                 $('#posts').append(postHTML);
                             });
                         } else {
-                            const likedGalleries = @json($likedGalleries);
-
                             data.likedPosts.data.forEach(function(like) {
-                                const isLiked = likedGalleries.includes(like.id);
-
                                 const likeHTML = `
                                     <div class="relative">
                                         <img src="/storage/${like.image_path}" alt="画像" class="w-full h-64 rounded-lg cursor-pointer object-cover">
 
                                         <!-- いいねボタン -->
                                         <button class="like-btn absolute bottom-2 right-2" data-gallery-id="${like.id}">
-                                            ${isLiked ? '❤️' : '🤍'}
+                                            ❤️
                                         </button>
                                     </div>
                                 `;
@@ -581,8 +572,13 @@
                             }
                             likesCountElement.text(response.likes_count);
                         },
-                        error: function () {
-                            alert('エラーが発生しました');
+                        error: function(xhr) {
+                            if (xhr.status === 419 || xhr.status === 401) {
+                                alert('セッションが切れました。再度ログインしてください。');
+                                window.location.href = '/login';
+                            } else {
+                                alert('エラーが発生しました');
+                            }
                         }
                     });
                 });
@@ -602,6 +598,31 @@
                 // モーダル自体がクリックされた時にモーダルを非表示にする
                 $('#modal').on('click', function() {
                     $(this).addClass('hidden');
+                });
+            });
+
+
+            const likes = document.getElementById('likes');
+
+            likes.addEventListener('click', (event) => {
+                if (event.target.closest('.dots-btn')) {
+                    event.stopPropagation();
+                    const button = event.target.closest('.dots-btn');
+                    const popover = button.nextElementSibling;
+
+                    popover.classList.toggle('hidden');
+
+                    document.querySelectorAll('.popover').forEach(otherPopover => {
+                        if (otherPopover !== popover) {
+                            otherPopover.classList.add('hidden');
+                        }
+                    });
+                }
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.popover').forEach(popover => {
+                    popover.classList.add('hidden');
                 });
             });
         });

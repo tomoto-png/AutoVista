@@ -9,23 +9,24 @@ use App\Models\Like;
 use App\Models\Tag;
 use App\Models\PriceTag;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class MyPageController extends Controller
 {
     public function index(){
         $user = Auth::user();
-        $likedGalleries = [];
         $priceTags = PriceTag::all();
+        $type = request()->query('type');
         $userPosts = CarGallery::where('user_id', $user->id)
             ->withCount('likes')
-            ->orderByDesc('created_at')
+            ->latest()
             ->paginate(12);
         $likedPosts = CarGallery::whereHas('likes', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
+            ->with(['tags'])
             ->withCount('likes')
-            ->orderByDesc('created_at')
+            ->latest()
             ->paginate(12);
         if (request()->ajax()) {
             return response()->json([
@@ -33,11 +34,7 @@ class MyPageController extends Controller
                 'likedPosts' => $likedPosts,
             ]);
         }
-
-        $likedGalleries = Like::where('user_id', $user->id)
-            ->pluck('car_gallery_id')
-            ->toArray();
-        return view('mypage.index', compact('user', 'userPosts', 'likedPosts','likedGalleries', 'priceTags'));
+        return view('mypage.index', compact('user', 'userPosts', 'likedPosts', 'priceTags'));
     }
     public function edit(){
         $user = Auth::user();
@@ -56,35 +53,53 @@ class MyPageController extends Controller
             'avatar.image' => '画像形式でアップロードしてください。',
             'avatar.max' => '画像は2MB以内でアップロードしてください。',
         ]);
-        $avatar = $request->file('avatar') ? $request->file('avatar')->store('images', 'public') : $user->avatar;
-        $user->update([
-            'name' => $request->input('name'),
-            'text' => $request->input('text'),
-            'avatar' => $avatar,
-        ]);
+        try {
+            DB::transaction(function () use ($user, $request) {
+                $avatar = $user->avatar;
+                if ($request->hasFile('avatar')) {
+                    if ($user->avatar) {
+                        Storage::disk('public')->delete($user->avatar);
+                    }
+                    $avatar = $request->file('avatar')->store('images', 'public');
+                }
+                $user->update([
+                    'name' => $request->input('name'),
+                    'text' => $request->input('text'),
+                    'avatar' => $avatar,
+                ]);
+            });
+        } catch (\Exception $e) {
+            throw $e;
+        }
         return redirect()->route('mypage.index');
     }
     public function destroy($id)
     {
         $gallery = CarGallery::findOrFail($id);
-        if ($gallery->image_path) {
-            Storage::disk('public')->delete($gallery->image_path);
+        try{
+            DB::transaction(function () use ($id, $gallery) {
+                if ($gallery->image_path) {
+                    Storage::disk('public')->delete($gallery->image_path);
+                    $gallery->tags()->detach();
+                    $gallery->delete();
+                }
+            });
+        } catch (\Exception $e) {
+            throw $e;
         }
-        $gallery->tags()->detach();
-        $gallery->delete();
+
         return redirect()->route('mypage.index');
     }
     public function editGallery($id)
     {
-        $carGallery = CarGallery::with(['tags', 'priceTag'])->findOrFail($id);
-        Log::debug("出力内容");
+        $carGallery = CarGallery::with(['tags', 'priceTag'])
+                        ->findOrFail($id);
         return response()->json($carGallery);
     }
 
     public function updateGgallery(Request $request, $id)
     {
         $carGallery = CarGallery::findOrFail($id);
-        Log::debug("更新内容");
         $request->validate([
             'title' => 'required|max:255',
             'image_path' => 'nullable|image|max:2048',
@@ -98,34 +113,46 @@ class MyPageController extends Controller
             'price_tag_id.required' => '値段を選択してください。',
         ]);
         $imagePath = $carGallery->image_path;
+        try {
+            DB::transaction(function () use ($request, $carGallery, $imagePath) {
+                if ($request->hasFile('image')) {
+                    if ($carGallery->image_path) {
+                        Storage::disk('public')->delete($carGallery->image_path);
+                    }
+                    $imagePath = $request->file('image')->store('images', 'public');
+                }
 
-        if ($request->hasFile('image')) {
-            if ($carGallery->image_path) {
-                Storage::disk('public')->delete($carGallery->image_path);
-            }
-            Log::debug('画像がアップロードされました: ');
-            $imagePath = $request->file('image')->store('images', 'public');
-        } else {
-            Log::debug('画像がアップロードされませんでした: ');
-        }
+                $carGallery->update([
+                    'title' => $request->title,
+                    'image_path' => $imagePath,
+                    'price_tag_id' => $request->price_tag_id,
+                ]);
 
-        $carGallery->update([
-            'title' => $request->title,
-            'image_path' => $imagePath,
-            'price_tag_id' => $request->price_tag_id,
-        ]);
-        if ($request->filled('tags')) {
-            $tagNames = explode(',', $request->tags);
-            $tagIds = [];
+                if ($request->filled('tags')) {
+                    $tagNames = array_filter(array_map(function($tagName) {
+                        return trim(mb_convert_kana($tagName, "as"));
+                    }, explode(',', $request->tags)));
 
-            foreach ($tagNames as $tagName) {
-                $cleanTagName = trim(mb_convert_kana($tagName, "as"));
-                $tag = Tag::firstOrCreate(['name' => $cleanTagName]);
-                $tagIds[] = $tag->id;
-            }
-            $carGallery->tags()->sync($tagIds);
-        } else {
-            $carGallery->tags()->detach();
+                    $existingTags = Tag::whereIn('name', $tagNames)->get();
+                    $existingNames = $existingTags->pluck('name')->all();
+                    $newTagNames = array_diff($tagNames, $existingNames);
+                    $newTags = array_map(function($name) {
+                        return ['name' => $name, 'created_at' => now(), 'updated_at' => now()];
+                    }, $newTagNames);
+                    if (!empty($newTags)) {
+                        Tag::insert($newTags);
+                        $insertedTags = Tag::whereIn('name', $newTagNames)->get();
+                        $allTags = $existingTags->concat($insertedTags);
+                    } else {
+                        $allTags = $existingTags;
+                    }
+                    $carGallery->tags()->sync($allTags->pluck('id')->all());
+                } else {
+                    $carGallery->tags()->detach();
+                }
+            });
+        } catch (\Exception $e) {
+            throw $e;
         }
 
         return redirect()->route('mypage.index');
