@@ -236,7 +236,7 @@
             });
 
             function openEditModal(galleryId) {
-                fetch(`mypage/gallery/${galleryId}/edit`)
+                fetch(`mypage/gallery/edit/${galleryId}`)
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('editForm').action = `/mypage/gallery/${data.id}`;
@@ -524,10 +524,30 @@
                             });
                         } else {
                             data.likedPosts.data.forEach(function(like) {
+                                const tagsHtml = Array.isArray(like.tags) && like.tags.length > 0
+                                    ? like.tags.map(tag => `<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-lg text-sm">${tag.name}</span>`).join('')
+                                    : '';
+                                const detailsHtml = `
+                                    <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1">
+                                        <img src="{{ asset('images/more_horiz_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-5 h-5">
+                                    </button>
+
+                                    <!-- 吹き出し詳細情報 -->
+                                    <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
+                                        <p class="font-semibold text-gray-600 text-sm mb-2">${like.title || 'タイトルなし'}</p>
+                                        <p class="text-gray-600 text-sm mb-2">${like.price_tag.name || '値段未設定'}</p>
+                                        <p class="text-gray-600 text-sm mb-2">${like.likes_count || 0} いいね</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            ${tagsHtml}
+                                        </div>
+                                    </div>
+                                `;
+
                                 const likeHTML = `
                                     <div class="relative">
                                         <img src="/storage/${like.image_path}" alt="画像" class="w-full h-64 rounded-lg cursor-pointer object-cover">
 
+                                        ${detailsHtml}
                                         <!-- いいねボタン -->
                                         <button class="like-btn absolute bottom-2 right-2" data-gallery-id="${like.id}">
                                             ❤️

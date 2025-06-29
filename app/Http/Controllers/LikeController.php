@@ -16,9 +16,10 @@ class LikeController extends Controller
         $user = Auth::user();
         $galleryId = $request->input('car_gallery_id');
 
-        $like = Like::where('user_id', $user->id)
-                    ->where('car_gallery_id', $galleryId)
-                    ->first();
+        $like = Like::firstWhere([
+                'user_id' => $user->id,
+                'car_gallery_id' => $galleryId
+            ]);
 
         if ($like) {
             $this->destoreRecommendations($user->id, $galleryId);
@@ -35,6 +36,7 @@ class LikeController extends Controller
 
         $likesCount = Like::where('car_gallery_id', $galleryId)->count();
 
+
         return response()->json([
             'liked' => $liked,
             'likes_count' => $likesCount,
@@ -44,19 +46,21 @@ class LikeController extends Controller
 
     private function storeRecommendations($userId, $galleryId)
     {
-        $gallery = CarGallery::find($galleryId);
-        $tags = $gallery->tags;
-        foreach ($tags as $tag) {
-            $recommendation = Recommendation::where('user_id', $userId)
-                ->where('tag_id', $tag->id)
-                ->first();
-
+        $tagIds = CarGallery::findOrFail($galleryId)
+                ->tags()
+                ->pluck('tags.id');
+        $recommendations = Recommendation::where('user_id', $userId)
+            ->whereIn('tag_id', $tagIds)
+            ->get()
+            ->keyBy('tag_id');
+        foreach ($tagIds as $tagId) {
+            $recommendation = $recommendations->get($tagId);
             if ($recommendation) {
                 $recommendation->increment('count');
             } else {
                 Recommendation::create([
                     'user_id' => $userId,
-                    'tag_id' => $tag->id,
+                    'tag_id' => $tagId,
                     'count' => 1,
                 ]);
             }
@@ -65,17 +69,18 @@ class LikeController extends Controller
 
     private function destoreRecommendations($userId, $galleryId)
     {
-        $gallery = CarGallery::find($galleryId);
-        $tags = $gallery->tags;
+        $tagIds = CarGallery::findOrFail($galleryId)
+                ->tags()
+                ->pluck('tags.id');
+        $recommendations = Recommendation::where('user_id', $userId)
+                ->whereIn('tag_id', $tagIds)
+                ->get()
+                ->keyBy('tag_id');
 
-        foreach ($tags as $tag) {
-            $recommendation = Recommendation::where('user_id', $userId)
-                ->where('tag_id', $tag->id)
-                ->first();
+        foreach ($tagIds as $tagId) {
+            $recommendation = $recommendations->get($tagId);
             if ($recommendation) {
-                // カウントを減らす
                 $recommendation->decrement('count');
-                // カウントがゼロになったら削除する
                 if ($recommendation->count == 0) {
                     $recommendation->delete();
                 }

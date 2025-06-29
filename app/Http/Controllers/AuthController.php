@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function showRegisterForm()
+    public function showRegister()
     {
         return view('auth.register');
     }
@@ -33,7 +33,7 @@ class AuthController extends Controller
         Auth::login($user);
         return redirect()->route('top.index');
     }
-    public function showLoginForm()
+    public function showLogin()
     {
         return view('auth.login');
     }
@@ -47,7 +47,8 @@ class AuthController extends Controller
             'password.required' => 'パスワードを入力してください。',
             'password.min' => 'パスワードは8文字以上で入力してください。',
         ]);
-        if (Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
+
+        if (Auth::attempt(['email' => $request['email'], 'password' => $request['password']])) {
             return redirect()->route('top.index');
         } else {
             return back()->withErrors(['login_error' => 'メールアドレスまたはパスワードが間違っています。']);

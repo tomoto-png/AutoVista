@@ -14,7 +14,9 @@ class SearchController extends Controller
         if (!$query) {
             return response()->json([]);
         }
-        $tags = Tag::where('name', 'LIKE', "%{$query}%")->limit(10)->get();
+        $tags = Tag::where('name', 'LIKE', "%{$query}%")
+                ->limit(10)
+                ->get();
         return response()->json($tags);
     }
     public function suggestions(Request $request)
@@ -22,20 +24,17 @@ class SearchController extends Controller
         $query = $request->input('q');
 
         // ギャラリーのサジェストを取得
-        $gallerySuggestions = CarGallery::where('title', 'LIKE', "%{$query}%")
+        $gallery = CarGallery::where('title', 'LIKE', "%{$query}%")
             ->limit(5)
             ->get(['title as name']);
 
         // タグのサジェストを取得
-        $tagSuggestions = Tag::where('name', 'LIKE', "%{$query}%")
+        $tags = Tag::where('name', 'LIKE', "%{$query}%")
             ->limit(5)
             ->get(['name']);
 
-        // ギャラリーとタグのサジェストを結合
-        $suggestions = $gallerySuggestions->concat($tagSuggestions);
-
-        // 重複を排除
-        $uniqueSuggestions = $suggestions->unique('name');
+        // ギャラリーとタグを結合
+        $uniqueSuggestions = $gallery->concat($tags)->unique('name')->values();
 
         return response()->json($uniqueSuggestions);
     }

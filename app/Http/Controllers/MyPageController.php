@@ -16,7 +16,6 @@ class MyPageController extends Controller
     public function index(){
         $user = Auth::user();
         $priceTags = PriceTag::all();
-        $type = request()->query('type');
         $userPosts = CarGallery::where('user_id', $user->id)
             ->withCount('likes')
             ->latest()
@@ -24,7 +23,7 @@ class MyPageController extends Controller
         $likedPosts = CarGallery::whereHas('likes', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->with(['tags'])
+            ->with(['priceTag', 'tags'])
             ->withCount('likes')
             ->latest()
             ->paginate(12);
@@ -36,10 +35,12 @@ class MyPageController extends Controller
         }
         return view('mypage.index', compact('user', 'userPosts', 'likedPosts', 'priceTags'));
     }
+
     public function edit(){
         $user = Auth::user();
         return view('mypage.edit', compact('user'));
     }
+
     public function update(Request $request){
         $user = Auth::user();
         $request->validate([
@@ -78,11 +79,9 @@ class MyPageController extends Controller
         $gallery = CarGallery::findOrFail($id);
         try{
             DB::transaction(function () use ($id, $gallery) {
-                if ($gallery->image_path) {
-                    Storage::disk('public')->delete($gallery->image_path);
-                    $gallery->tags()->detach();
-                    $gallery->delete();
-                }
+                Storage::disk('public')->delete($gallery->image_path);
+                $gallery->tags()->detach();
+                $gallery->delete();
             });
         } catch (\Exception $e) {
             throw $e;
@@ -90,6 +89,7 @@ class MyPageController extends Controller
 
         return redirect()->route('mypage.index');
     }
+
     public function editGallery($id)
     {
         $carGallery = CarGallery::with(['tags', 'priceTag'])
@@ -141,11 +141,8 @@ class MyPageController extends Controller
                     }, $newTagNames);
                     if (!empty($newTags)) {
                         Tag::insert($newTags);
-                        $insertedTags = Tag::whereIn('name', $newTagNames)->get();
-                        $allTags = $existingTags->concat($insertedTags);
-                    } else {
-                        $allTags = $existingTags;
                     }
+                    $allTags = Tag::whereIn('name', $tagNames)->get();
                     $carGallery->tags()->sync($allTags->pluck('id')->all());
                 } else {
                     $carGallery->tags()->detach();

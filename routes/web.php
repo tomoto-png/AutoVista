@@ -7,10 +7,10 @@ use App\Http\Controllers\MyPageController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\SearchController;
 
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('login', [AuthController::class, 'login']);
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/top', [TopController::class, 'index'])->name('top.index');
@@ -27,7 +27,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit', [MypageController::class, 'edit'])->name('mypage.edit');
         Route::put('/', [MypageController::class, 'update'])->name('mypage.update');
         Route::delete('/{id}', [MypageController::class, 'destroy'])->name('mypage.destroy');
-        Route::get('/gallery/{id}/edit', [MypageController::class, 'editGallery'])->name('gallery.edit');
+        Route::get('/gallery/edit/{id}', [MypageController::class, 'editGallery'])->name('gallery.edit');
         Route::put('/gallery/{id}', [MypageController::class, 'updateGgallery'])->name('gallery.update');
     });
 });

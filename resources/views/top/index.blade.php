@@ -26,7 +26,7 @@
     <div class="max-w-5xl mx-auto relative">
         {{-- ヘッダー --}}
         <div class="flex items-center justify-center fixed top-0 left-0 w-full z-50 mt-5">
-            @if(isset($searchResults))
+            @if(request()->filled('query') || request()->filled('price_tag_id'))
                 <h1 class="text-3xl font-bold p-4 underline transition-transform duration-300 hover:scale-105 cursor-pointer"
                     onclick="window.scrollTo({ top: 0, behavior: 'smooth' });">
                     検索結果
@@ -162,80 +162,40 @@
                 </div>
             </div>
             <div id="postList" class="mt-20 columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
-                @if(isset($searchResults))
-                    @forelse($searchResults as $post)
-                        <div class="break-inside-avoid rounded-lg overflow-hidden shadow-lg post relative group" data-gallery-id="{{ $post->id }}">
-                            <img src="{{ asset('storage/' . $post->image_path) }}" alt="画像" class="w-full h-auto rounded-t-lg cursor-pointer image-thumbnail transition-all duration-300 group-hover:brightness-50" data-full="{{ asset('storage/' . $post->image_path) }}">
+                @forelse($posts as $post)
+                    <div class="break-inside-avoid rounded-lg overflow-hidden shadow-lg post relative group" data-gallery-id="{{ $post->id }}">
+                        <img src="{{ asset('storage/' . $post->image_path) }}" alt="画像" class="w-full h-auto rounded-t-lg cursor-pointer image-thumbnail transition-all duration-300 group-hover:brightness-50" data-full="{{ asset('storage/' . $post->image_path) }}">
+                        <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 focus:outline-none opacity-0 group-hover:opacity-100 ">
+                            <img src="{{ asset('images/more_horiz_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-5 h-5">
+                        </button>
 
-                            <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 focus:outline-none opacity-0 group-hover:opacity-100">
-                                <img src="{{ asset('images/more_horiz_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-5 h-5">
-                            </button>
-
-                            <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
-                                <p class="font-semibold text-sm text-gray-600 mb-2">{{ $post->title }}</p>
-                                <p class="text-gray-600 text-sm mb-2">{{ $post->priceTag ? $post->priceTag->name : '値段未設定' }}</p>
-                                <p class="text-gray-600 text-sm mb-2">{{ $post->likes_count }} いいね</p>
-
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($post->tags as $tag)
-                                        <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-lg text-sm">{{ $tag->name }}</span>
-                                    @endforeach
-                                </div>
+                        <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
+                            <p class="font-semibold text-sm text-gray-600 mb-2">{{ $post->title }}</p>
+                            <p class="text-gray-600 text-sm mb-2">{{ $post->priceTag->name ?? '値段未設定' }}</p>
+                            <p class="text-gray-600 text-sm mb-2">{{ $post->likes_count }} いいね</p>
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($post->tags as $tag)
+                                    <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-lg text-sm">{{ $tag->name }}</span>
+                                @endforeach
                             </div>
-
-                            @auth
-                                <button class="like-btn absolute bottom-2 right-2 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-gallery-id="{{ $post->id }}">
-                                    @if(in_array($post->id, $likedGalleries))
-                                        ❤️
-                                    @else
-                                        🤍
-                                    @endif
-                                </button>
-                            @else
-                                <p class="text-base mt-2 text-gray-500 absolute bottom-2 right-2 bg-white bg-opacity-70 rounded px-2">
-                                    <a href="{{ route('login') }}" class="underline">ログインするといいねできます</a>
-                                </p>
-                            @endauth
                         </div>
-                    @empty
-                        <p class="text-center text-white">該当する投稿はありません。</p>
-                    @endforelse
-                @else
-                    @forelse($recommendedPosts as $recommendedPost)
-                        <div class="break-inside-avoid rounded-lg overflow-hidden shadow-lg post relative group" data-gallery-id="{{ $recommendedPost->id }}">
-                            <img src="{{ asset('storage/' . $recommendedPost->image_path) }}" alt="画像" class="w-full h-auto rounded-t-lg cursor-pointer image-thumbnail transition-all duration-300 group-hover:brightness-50" data-full="{{ asset('storage/' . $recommendedPost->image_path) }}">
-                            <button class="dots-btn absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 focus:outline-none opacity-0 group-hover:opacity-100 ">
-                                <img src="{{ asset('images/more_horiz_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}" class="w-5 h-5">
+                        @auth
+                            <button class="like-btn absolute bottom-2 right-2 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-gallery-id="{{ $post->id }}">
+                                @if(in_array($post->id, $likedGalleries))
+                                    ❤️
+                                @else
+                                    🤍
+                                @endif
                             </button>
-
-                            <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
-                                <p class="font-semibold text-sm text-gray-600 mb-2">{{ $recommendedPost->title }}</p>
-                                <p class="text-gray-600 text-sm mb-2">{{ $recommendedPost->priceTag->name ?? '値段未設定' }}</p>
-                                <p class="text-gray-600 text-sm mb-2">{{ $recommendedPost->likes_count }} いいね</p>
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($recommendedPost->tags as $tag)
-                                        <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-lg text-sm">{{ $tag->name }}</span>
-                                    @endforeach
-                                </div>
-                            </div>
-                            @auth
-                                <button class="like-btn absolute bottom-2 right-2 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-gallery-id="{{ $recommendedPost->id }}">
-                                    @if(in_array($recommendedPost->id, $likedGalleries))
-                                        ❤️
-                                    @else
-                                        🤍
-                                    @endif
-                                </button>
-                            @else
-                                <p class="text-sm mt-1 text-[var(--white)]">
-                                    <a href="{{ route('login') }}" class="underline">ログインでいいね</a>
-                                </p>
-                            @endauth
-                        </div>
-                    @empty
-                        <p class="text-center text-white">投稿がまだありません。</p>
-                    @endforelse
-                @endif
+                        @else
+                            <p class="text-sm mt-1 text-[var(--white)]">
+                                <a href="{{ route('login') }}" class="underline">ログインでいいね</a>
+                            </p>
+                        @endauth
+                    </div>
+                @empty
+                    <p class="text-center text-white">投稿がまだありません。</p>
+                @endforelse
             </div>
             <!-- モーダル -->
             <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
@@ -494,7 +454,7 @@
             let loading = false;
             let hasMorePost = true;
             const likedGalleries = @json($likedGalleries);
-            const displayedIds = new Set();
+            const displayedIds = new Set();//Set は重複しない値だけを保存する特別なオブジェクト
             document.querySelectorAll('[data-gallery-id]').forEach(element => {
                 displayedIds.add(parseInt(element.dataset.galleryId, 10));
             });
@@ -502,16 +462,15 @@
             window.addEventListener('scroll', () => {
                 if (!hasMorePost) return;
 
-                if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200) {
+                if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300) {
                     if (!loading) {
                         loading = true;
-                        page++;
 
                         //URLのクエリパラメータとして page と displayed_idsを付け送信データとなる
                         const query = document.querySelector('input[name="query"]')?.value || '';
                         const priceTagId = document.querySelector('select[name="price_tag_id"]')?.value || '';
 
-                        const url = `/top?page=${page}&displayed_ids=${Array.from(displayedIds).join(',')}&query=${encodeURIComponent(query)}&price_tag_id=${priceTagId}`;
+                        const url = `/top?displayed_ids=${Array.from(displayedIds).join(',')}&query=${encodeURIComponent(query)}&price_tag_id=${priceTagId}`;//encodeURIComponentはURLで安全にデータを送るために必須
                         //データ送信getデータなのでurlに
                         fetch(url, {
                             headers: {
@@ -550,7 +509,7 @@
                                         <!-- 吹き出し詳細情報 -->
                                         <div class="popover absolute top-10 right-2 bg-white text-sm shadow-lg rounded-lg p-4 w-48 hidden z-10">
                                             <p class="font-semibold text-gray-600 text-sm mb-2">${post.title || 'タイトルなし'}</p>
-                                            <p class="text-gray-600 text-sm mb-2">${post.priceTag ? post.priceTag.name : '値段未設定'}</p>
+                                            <p class="text-gray-600 text-sm mb-2">${post.price_tag.name || '値段未設定'}</p>
                                             <p class="text-gray-600 text-sm mb-2">${post.likes_count || 0} いいね</p>
                                             <div class="flex flex-wrap gap-1">
                                                 ${tagsHtml}
@@ -597,11 +556,12 @@
 
                         suggestionsArray.forEach(item => {
                             const div = document.createElement("div");
-                            div.classList.add("suggestion-item", "p-2", "text-lg", "cursor-pointer", "border-b", "border-gray-300");
+                            div.classList.add("suggestion-item", "p-2", "text-lg", "cursor-pointer", "border-b", "border-gray-300", "hover:bg-gray-200");
                             div.innerText = item.name;
                             div.addEventListener("click", function () {
                                 queryInput.value = item.name;
                                 suggestions.classList.add("hidden");
+                                queryInput.form.submit();
                             });
                             suggestions.appendChild(div);
                         });
