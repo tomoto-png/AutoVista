@@ -231,16 +231,18 @@
 
             let selectedTags = [];
 
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
             //タグ候補の表示
             function showTagSuggestions(input) {
                 fetch(`/tags/search?query=${input}`)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 419 || response.status === 401) {
+                            alert('セッションが切れました。再度ログインしてください。');
+                            window.location.href = '/login';
+                            return;
+                        }
+                        if (!response.ok) throw new Error('通信エラー');
+                        return response.json();
+                    })
                     .then(tags => {
                         tagSuggestions.innerHTML = "";
                         if (tags.length === 0) {
@@ -400,30 +402,33 @@
                 const galleryId = $(this).data('gallery-id');
                 const button = $(this);
                 const likesCountElement = button.closest('.p-4').find('.likes-count'); // .p-4 を使って親要素を取得
-
-                $.ajax({
-                    url: '/top/like',
+                fetch('/like', {
                     method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        car_gallery_id: galleryId,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    success: function (response) {
-                        if (response.liked) {
-                            button.text('❤️');
-                        } else {
-                            button.text('🤍');
-                        }
-                        likesCountElement.text(response.likes_count);
-                    },
-                    error: function(xhr) {
-                        if (xhr.status === 419 || xhr.status === 401) {
-                            alert('セッションが切れました。再度ログインしてください。');
-                            window.location.href = '/login';
-                        } else {
-                            alert('エラーが発生しました');
-                        }
+                    body: JSON.stringify({
+                        car_gallery_id: galleryId
+                    }),
+                })
+                .then(response => {
+                    if (response.status === 419 || response.status === 401) {
+                        alert('セッションが切れました。再度ログインしてください。');
+                        window.location.href = '/login';
+                        return;
                     }
+                    if (!response.ok) throw new Error('通信エラー');
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    button.text(data.liked ? '❤️' : '🤍');
+                    likesCountElement.text(data.likes_count);
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('エラーが発生しました');
                 });
             });
 
@@ -478,8 +483,15 @@
                                 'Accept': 'application/json'// 返ってくるデータはJSONの指定
                             }
                         })
-                        //戻り値
-                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 419 || response.status === 401) {
+                                alert('セッションが切れました。再度ログインしてください。');
+                                window.location.href = '/login';
+                                return;
+                            }
+                            if (!response.ok) throw new Error('通信エラー');
+                            return response.json();
+                        })
                         .then(posts => {
                             if (posts.length > 0) {
                                 const postList = document.getElementById('postList');
@@ -544,7 +556,15 @@
 
             function displaySuggestions(query) {
                 fetch(`/suggestions?q=${query}`)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 419 || response.status === 401) {
+                            alert('セッションが切れました。再度ログインしてください。');
+                            window.location.href = '/login';
+                            return;
+                        }
+                        if (!response.ok) throw new Error('通信エラー');
+                        return response.json();
+                    })
                     .then(data => {
                         suggestions.innerHTML = ""; // 一度リセット
                         const suggestionsArray = Array.isArray(data) ? data : Object.values(data);

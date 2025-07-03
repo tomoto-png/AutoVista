@@ -19,7 +19,7 @@ Route::get('/suggestions', [SearchController::class, 'suggestions']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/top', [TopController::class, 'store'])->name('top.store');
-    Route::post('/top/like', [LikeController::class, 'Like'])->name('like.toggle');
+    Route::post('/like', [LikeController::class, 'Like'])->name('like.toggle');
     Route::get('/tags/search', [SearchController::class, 'search']);
     Route::prefix("mypage")->group(function () {
         Route::get('/', [MypageController::class, 'index'])->name('mypage.index');
