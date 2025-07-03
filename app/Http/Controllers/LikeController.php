@@ -13,24 +13,24 @@ class LikeController extends Controller
 {
     public function Like(Request $request)
     {
-        $user = Auth::user();
+        $userId = Auth::user()->id;
         $galleryId = $request->input('car_gallery_id');
 
         $like = Like::firstWhere([
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 'car_gallery_id' => $galleryId
             ]);
 
         if ($like) {
-            $this->destoreRecommendations($user->id, $galleryId);
+            $this->destoreRecommendations($userId, $galleryId);
             $like->delete();
             $liked = false;
         } else {
             Like::create([
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 'car_gallery_id' => $galleryId,
             ]);
-            $this->storeRecommendations($user->id, $galleryId);
+            $this->storeRecommendations($userId, $galleryId);
             $liked = true;
         }
 

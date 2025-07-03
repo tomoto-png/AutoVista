@@ -15,7 +15,7 @@ class TopController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
         $likedGalleries = [];
         $priceTags = PriceTag::all();
         $displayedIds = $request->ajax()
@@ -134,7 +134,7 @@ class TopController extends Controller
 
     public function store(Request $request)
     {
-        $userId = $request->user()->id;
+        $userId = Auth::user()->id;
         $request->validate([
             'title' => 'required|max:255',
             'image' => 'nullable|image|max:2048',
