@@ -33,7 +33,7 @@
 
                 <div class="flex justify-center">
                     <div class="bg-transparent relative w-32 h-32 border border-dashed border-gray-300 rounded-full">
-                        <div id="imagePreview" class="absolute inset-0 hidden flex items-center justify-center z-10">
+                        <div id="imagePreview" class="absolute inset-0 hidden items-center justify-center z-10">
                             <img id="previewImage" src="" alt="プレビュー画像" class="w-full h-full object-cover rounded-full shadow-md cursor-pointer">
                         </div>
 
@@ -90,6 +90,7 @@
                     const previewImage = document.getElementById('previewImage');  // プレビュー表示エリアを取得
                     previewImage.src = e.target.result;  // プレビュー画像を更新
                     document.getElementById('imagePreview').classList.remove('hidden');  // プレビュー表示エリアを表示
+                    document.getElementById('imagePreview').classList.add('flex');  // プレビュー表示エリアを表示
                 };
                 reader.readAsDataURL(file);  // ファイルを読み込む
             }
@@ -107,6 +108,7 @@
                 const previewImage = document.getElementById('previewImage');
                 previewImage.src = existingImage;  // 既存の画像をプレビューに設定
                 document.getElementById('imagePreview').classList.remove('hidden');  // プレビュー表示エリアを表示
+                document.getElementById('imagePreview').classList.add('flex');  // プレビュー表示エリアを表示
             }
         });
     </script>
