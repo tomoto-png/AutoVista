@@ -15,11 +15,9 @@ class LikeController extends Controller
     {
         $userId = Auth::user()->id;
         $galleryId = $request->input('car_gallery_id');
-
-        $like = Like::firstWhere([
-                'user_id' => $userId,
-                'car_gallery_id' => $galleryId
-            ]);
+        $like = Like::where('user_id', $userId)
+            ->where('car_gallery_id', $galleryId)
+            ->first();
 
         if ($like) {
             $this->destoreRecommendations($userId, $galleryId);
@@ -46,13 +44,15 @@ class LikeController extends Controller
 
     private function storeRecommendations($userId, $galleryId)
     {
+        //いいね処理をした投稿の関連タグを取得
         $tagIds = CarGallery::findOrFail($galleryId)
                 ->tags()
                 ->pluck('tags.id');
+        //関連タグを取得
         $recommendations = Recommendation::where('user_id', $userId)
             ->whereIn('tag_id', $tagIds)
             ->get()
-            ->keyBy('tag_id');
+            ->keyBy('tag_id');//連想配列に変換
         foreach ($tagIds as $tagId) {
             $recommendation = $recommendations->get($tagId);
             if ($recommendation) {

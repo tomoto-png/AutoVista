@@ -48,7 +48,7 @@ class AuthController extends Controller
             'password.min' => 'パスワードは8文字以上で入力してください。',
         ]);
 
-        if (Auth::attempt(['email' => $request['email'], 'password' => $request['password']])) {
+        if (Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
             return redirect()->route('top.index');
         } else {
             return back()->withErrors(['login_error' => 'メールアドレスまたはパスワードが間違っています。']);

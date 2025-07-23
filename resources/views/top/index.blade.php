@@ -55,7 +55,7 @@
                 <div class="flex border rounded-lg w-full max-w-2xl relative">
                     <input type="text" id="query" name="query" placeholder="キーワード検索"
                            class="border-none px-3 py-3 text-lg text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                           value="{{ request('query') }}" autocomplete="off">
+                           value="{{ request('query') }}" autocomplete="off" />
 
                     <img src="{{ asset('images/close_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24 (1).svg') }}"
                          class="w-8 h-8 absolute top-1/2 right-36 transform -translate-y-1/2 cursor-pointer"
@@ -88,11 +88,12 @@
                     document.addEventListener("DOMContentLoaded", function() {
                         const postModal = document.getElementById('postModal');
                         postModal.classList.remove('hidden'); // モーダルを表示
+                        postModal.classList.add('flex');
                     });
                 </script>
             @endif
             {{-- 投稿モーダル --}}
-            <div id="postModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div id="postModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
                 <div class="bg-[var(--bg-light-gray)] p-8 rounded-2xl shadow-2xl w-full max-w-3xl text-[var(--text-main)] relative">
                     <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">新規投稿</h2>
 
@@ -103,13 +104,13 @@
                                 <div>
                                     <input type="text" name="title" id="title"
                                         class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                                        placeholder="タイトルを入力">
+                                        placeholder="タイトルを入力" required />
                                     @error('title')
                                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div>
-                                    <select name="price_tag_id" id="price_tag_id"
+                                    <select name="price_tag_id" id="price_tag_id" required
                                         class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none">
                                         <option value="">値段を選択してください</option>
                                         @foreach($priceTags as $priceTag)
@@ -124,14 +125,15 @@
                                 </div>
                                 <div class="flex justify-center">
                                     <div class="bg-[var(--white)] relative w-64 h-64">
-                                        <div id="imagePreview" class="absolute inset-0 hidden flex items-center justify-center z-10">
+                                        <div id="imagePreview" class="absolute inset-0 hidden items-center justify-center z-10">
                                             <img id="previewImage" src="" alt="プレビュー画像" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer">
                                         </div>
                                         <label for="image" class="cursor-pointer flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 transition z-20">
                                             <img src="{{ asset('images/imag.svg') }}" alt="画像アップロード" class="w-12 h-12 opacity-70">
                                             <span class="mt-2 text-base text-gray-600">画像を選択</span>
-                                            <input type="file" name="image" id="image" accept="image/*" class="hidden">
+                                            <input type="file" name="image" id="image" accept="image/*" class="hidden" required />
                                         </label>
+                                        <p class="text-red-600 text-base mt-1">※画像は必須です忘れないように！</p>
                                     </div>
                                 </div>
                                 @error('image')
@@ -205,24 +207,38 @@
             </div>
         </div>
         <footer class="text-center py-4 text-white text-lg mt-20">
-            © 2025 Tomato
+            © 2025 Tomoto
         </footer>
     </div>
     <script>
-        const openModalButton = document.getElementById('openModal');
-        const postModal = document.getElementById('postModal');
-        const closeModalButton = document.getElementById('closeModal');
-
-        if (openModalButton) {
-            openModalButton.addEventListener('click', function() {
-                postModal.classList.remove('hidden');
-            });
-        }
-
-        closeModalButton.addEventListener('click', function() {
-            postModal.classList.add('hidden');
-        });
         document.addEventListener("DOMContentLoaded", function() {
+            const openModalButton = document.getElementById('openModal');
+            const postModal = document.getElementById('postModal');
+            const closeModalButton = document.getElementById('closeModal');
+
+            if (openModalButton) {
+                openModalButton.addEventListener('click', function() {
+                    postModal.classList.remove('hidden');
+                    postModal.classList.add('flex');
+                });
+            }
+
+            if (closeModalButton) {
+                closeModalButton.addEventListener('click', function() {
+                    postModal.classList.add('hidden');
+                    postModal.classList.remove('flex');
+                });
+            }
+            if (postModal) {
+                postModal.addEventListener('click', function(event) {
+                    // クリックしたのがモーダルの背景だった場合のみ閉じる
+                    if (event.target === postModal) {
+                        postModal.classList.add('hidden');
+                        postModal.classList.remove('flex');
+                    }
+                });
+            }
+
             const tagInput = document.getElementById("tagInput");
             const tagSuggestions = document.getElementById("tagSuggestions");
             const selectedTagsContainer = document.getElementById("selectedTagsContainer");
@@ -250,15 +266,10 @@
                             return;
                         }
 
-                        tags.forEach((tag, index) => {
+                        tags.forEach(tag => {
                             const suggestion = document.createElement("div");
                             suggestion.textContent = tag.name;
                             suggestion.classList.add("px-2", "py-1", "bg-[var(--white)]", "hover:bg-gray-200", "cursor-pointer", "border-b", "border-gray-300");
-
-                            // アイテムが選択されている場合、選択のスタイルを適用
-                            if (index === selectedTagIndex) {
-                                suggestion.classList.add("bg-gray-200");
-                            }
 
                             suggestion.addEventListener("click", function() {
                                 addTag(tag.name);
@@ -273,7 +284,7 @@
                         console.error("Error fetching tags:", error);
                     });
             }
-            //選択されたタグの表示
+            //タグ入力時の処理、候補の表示の処理を呼び出し
             tagInput.addEventListener("input", function() {
                 const input = tagInput.value.trim();
                 if (input.length < 1) {
@@ -284,6 +295,7 @@
                 showTagSuggestions(input);
             });
 
+            //タグの追加
             function addTag(tag) {
                 if (!selectedTags.includes(tag)) {
                     selectedTags.push(tag);
@@ -312,14 +324,17 @@
                     selectedTagsContainer.appendChild(tagItem);
                 });
             }
+
             tagInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
 
                     const suggestionItems = tagSuggestions.querySelectorAll("div");
+                    //選択リストからの場合
                     if (selectedTagIndex >= 0 && selectedTagIndex < suggestionItems.length) {
                         const selectedTag = suggestionItems[selectedTagIndex].textContent.trim();
                         addTag(selectedTag);
+                    //入力欄からの場合
                     } else if (tagInput.value.trim() !== "") {
                         addTag(tagInput.value.trim());
                     }
@@ -329,7 +344,7 @@
                     selectedTagIndex = -1;
                 }
             });
-            // 矢印キーで候補を選択
+            // 矢印キーで候補リストを選択
             document.addEventListener("keydown", function(event) {
                 const suggestionItems = tagSuggestions.querySelectorAll("div"); // 候補リストのアイテムを取得
 
@@ -345,7 +360,7 @@
                     }
                 }
             });
-            // 選択されているタグのビジュアル更新
+            // 選択されている候補デザインを更新
             function updateTagSelection(items) {
                 // すべてのアイテムから選択スタイルを削除
                 items.forEach((item) => {
@@ -358,43 +373,53 @@
                 }
             }
 
+            //タグ候補を非表示にする
             document.addEventListener("click", function(event) {
                 if (!tagInput.contains(event.target) && !tagSuggestions.contains(event.target)) {
                     tagSuggestions.classList.add("hidden");
+                    selectedTagIndex = -1;
                 }
             });
-            // タグ候補をクリックしたときにタグ候補を表示
+
+            // 入力欄をクリックしたときにタグ候補を表示
             tagInput.addEventListener("click", function() {
                 const input = tagInput.value.trim();
                 if (input.length >= 1) {
                     showTagSuggestions(input);
                 }
             });
-            // フォーム送信時にタグを更新
-            form.addEventListener('submit', function(event) {
+
+            // フォーム送信時に選択したタグを一緒に送信
+            form.addEventListener('submit', function() {
                 document.querySelector('#tagInput').value = selectedTags.join(',');
             });
 
+            const previewImage = document.getElementById('previewImage');
+            const image = document.getElementById('image');
             // 画像プレビュー
-            document.getElementById('image').addEventListener('change', function(event) {
+            image.addEventListener('change', function(event) {
                 const file = event.target.files[0];  // 画像ファイルを取得
 
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const previewImage = document.getElementById('previewImage');
                         previewImage.src = e.target.result;  // プレビュー画像を更新
 
                         // プレビュー表示エリアを表示
                         const imagePreview = document.getElementById('imagePreview');
                         imagePreview.classList.remove('hidden');  // プレビュー表示エリアを表示
+                        imagePreview.classList.add('flex');
                     };
                     reader.readAsDataURL(file);  // ファイルを読み込む
+                } else {
+                    previewImage.src = '';
+                    imagePreview.classList.add('hidden');
+                    imagePreview.classList.remove('flex');
                 }
             });
             // 画像をクリックするとファイル選択ダイアログを開く
-            document.getElementById('previewImage').addEventListener('click', function() {
-                document.getElementById('image').click();  // input要素をクリックしてファイルダイアログを開く
+            previewImage.addEventListener('click', function() {
+                image.click();  // input要素をクリックしてファイルダイアログを開く
             });
 
             //いいね機能
@@ -432,8 +457,8 @@
                 });
             });
 
+            //投稿の詳細の表示と非表示を切り替える
             const postList = document.getElementById('postList');
-
             postList.addEventListener('click', (event) => {
                 if (event.target.closest('.dots-btn')) {
                     event.stopPropagation();
@@ -442,6 +467,7 @@
 
                     popover.classList.toggle('hidden');
 
+                    //他に詳細を閉じる
                     document.querySelectorAll('.popover').forEach(otherPopover => {
                         if (otherPopover !== popover) {
                             otherPopover.classList.add('hidden');
@@ -449,25 +475,27 @@
                     });
                 }
             });
+            //ページをクリックしたら詳細を閉じる
             document.addEventListener('click', () => {
                 document.querySelectorAll('.popover').forEach(popover => {
                     popover.classList.add('hidden');
                 });
             });
 
-            let page = 1;
+            //無限スクロール機能
             let loading = false;
             let hasMorePost = true;
-            const likedGalleries = @json($likedGalleries);
+            const likedGalleries = @json($likedGalleries);//いいね済み投稿のIDを取得
             const displayedIds = new Set();//Set は重複しない値だけを保存する特別なオブジェクト
             document.querySelectorAll('[data-gallery-id]').forEach(element => {
-                displayedIds.add(parseInt(element.dataset.galleryId, 10));
+                displayedIds.add(parseInt(element.dataset.galleryId, 10));//取得したidを整数に変換し追加する
             });
 
+            //スクロールイベント
             window.addEventListener('scroll', () => {
                 if (!hasMorePost) return;
 
-                if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300) {
+                if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
                     if (!loading) {
                         loading = true;
 
@@ -550,6 +578,7 @@
                     }
                 }
             });
+            //検索候補の処理
             const queryInput = document.getElementById('query');
             const suggestions = document.getElementById('suggestions');
             let selectedIndex = -1;
@@ -594,7 +623,6 @@
                     });
             }
 
-
             if (queryInput) {
                 queryInput.addEventListener('input', function () {
                     const query = this.value;
@@ -606,6 +634,7 @@
                     }
                 });
 
+                // 入力欄をクリックしたときにタグ候補を表示
                 queryInput.addEventListener('click', function (event) {
                     event.stopPropagation();
 
@@ -648,8 +677,10 @@
                     }
                 });
             }
+            //ページをクリックすると検索候補を非表示する
             document.addEventListener('click', function () {
                 suggestions.classList.add('hidden');
+                selectedIndex = -1;
             });
 
             //画像拡大モーダル

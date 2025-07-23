@@ -64,8 +64,8 @@ class MyPageController extends Controller
                     $avatar = $request->file('avatar')->store('images', 'public');
                 }
                 $user->update([
-                    'name' => $request->input('name'),
-                    'text' => $request->input('text'),
+                    'name' => $request->name,
+                    'text' => $request->text,
                     'avatar' => $avatar,
                 ]);
             });
@@ -86,7 +86,6 @@ class MyPageController extends Controller
         } catch (\Exception $e) {
             throw $e;
         }
-
         return redirect()->route('mypage.index');
     }
 
@@ -102,12 +101,13 @@ class MyPageController extends Controller
         $carGallery = CarGallery::findOrFail($id);
         $request->validate([
             'title' => 'required|max:255',
-            'image_path' => 'nullable|image|max:2048',
+            'image_path' => 'required|image|max:2048',
             'price_tag_id' => 'required|exists:price_tags,id',
             'tags' => 'nullable|string',
         ],[
             'title.required' => '名前を入力してください。',
             'title.string' => '名前は文字列で入力してください。',
+            'image_path.required' => '画像は必須です追加してください。',
             'image_path.image' => '画像形式でアップロードしてください。',
             'image_path.max' => '画像は2MB以内でアップロードしてください。',
             'price_tag_id.required' => '値段を選択してください。',
@@ -133,8 +133,7 @@ class MyPageController extends Controller
                         return trim(mb_convert_kana($tagName, "as"));
                     }, explode(',', $request->tags)));
 
-                    $existingTags = Tag::whereIn('name', $tagNames)->get();
-                    $existingNames = $existingTags->pluck('name')->all();
+                    $existingNames = Tag::whereIn('name', $tagNames)->pluck('name')->all();
                     $newTagNames = array_diff($tagNames, $existingNames);
                     $newTags = array_map(function($name) {
                         return ['name' => $name, 'created_at' => now(), 'updated_at' => now()];
@@ -142,8 +141,8 @@ class MyPageController extends Controller
                     if (!empty($newTags)) {
                         Tag::insert($newTags);
                     }
-                    $allTags = Tag::whereIn('name', $tagNames)->get();
-                    $carGallery->tags()->sync($allTags->pluck('id')->all());
+                    $tagIds = Tag::whereIn('name', $tagNames)->pluck('id')->all();
+                    $carGallery->tags()->sync($tagIds);
                 } else {
                     $carGallery->tags()->detach();
                 }

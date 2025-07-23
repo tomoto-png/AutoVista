@@ -42,7 +42,7 @@
                     </div>
                 @else
                     <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center rounded-full bg-gray-300 text-2xl font-bold text-[var(--text-main)] shadow-lg">
-                        {{ $user->name ?? (string) $user->id }}
+                        {{ (string) $user->id }}
                     </div>
                 @endif
 
@@ -126,7 +126,7 @@
                     </div>
                 </div>
             </div>
-            <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
                 <div class="modal-content bg-[var(--bg-light-gray)] p-8 rounded-2xl shadow-2xl w-full max-w-3xl text-[var(--text-main)] relative">
                     <h3 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">投稿編集</h3>
                     <form id="editForm" action="" method="POST"  enctype="multipart/form-data" class="space-y-5">
@@ -141,11 +141,11 @@
                                 <div>
                                     <input type="text" name="title" id="title"
                                         class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                                        placeholder="タイトルを入力">
+                                        placeholder="タイトルを入力" required />
                                 </div>
                                 <!-- 値段選択 -->
                                 <div>
-                                    <select name="price_tag_id" id="price_tag_id"
+                                    <select name="price_tag_id" id="price_tag_id" required
                                         class="w-full text-lg border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none">
                                         <option value="">値段を選択してください</option>
                                         @foreach($priceTags as $priceTag)
@@ -158,7 +158,7 @@
                                 <div class="flex justify-center">
                                     <div class="bg-[var(--white)] relative w-64 h-64">
                                         <!-- プレビュー表示エリア（アイコンの上に被せる） -->
-                                        <div id="imagePreview" class="absolute inset-0 hidden flex items-center justify-center z-10">
+                                        <div id="imagePreview" class="absolute inset-0 hidden items-center justify-center z-10">
                                             <img id="previewImage" src="" alt="プレビュー画像" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer">
                                         </div>
 
@@ -166,8 +166,9 @@
                                         <label for="image" class="cursor-pointer flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 transition z-20">
                                             <img src="{{ asset('images/imag.svg') }}" alt="画像アップロード" class="w-12 h-12 opacity-70">
                                             <span class="mt-2 text-base text-gray-600">画像を選択</span>
-                                            <input type="file" name="image" id="image" accept="image/*" class="hidden">
+                                            <input type="file" name="image" id="image" accept="image/*" class="hidden" required />
                                         </label>
+                                        <p class="text-red-600 text-base mt-1">※画像は必須です忘れないように！</p>
                                     </div>
                                 </div>
                             </div>
@@ -202,7 +203,7 @@
             <div id="likes-pagination" data-next-url="{{ $likedPosts->nextPageUrl() }}"></div>
         </div>
         <footer class="text-center py-4 text-white text-lg mt-20">
-            © 2025 Tomato
+            © 2025 Tomoto
         </footer>
     </div>
 
@@ -215,6 +216,9 @@
             const tagSuggestions = document.getElementById("tagSuggestions");
             const selectedTagsContainer = document.getElementById("selectedTagsContainer");
             const editForm = document.querySelector('#editForm');
+            const previewImage = document.getElementById('previewImage');
+            const imagePreview = document.getElementById('imagePreview');
+            const imageInput = document.getElementById('image');
 
             let selectedTagIndex = -1;
             let selectedTags = [];
@@ -227,6 +231,7 @@
 
             closeEditlButton.addEventListener('click', function() {
                 editModal.classList.add('hidden');
+                editModal.classList.remove('flex');
             });
 
             function openEditModal(galleryId) {
@@ -243,10 +248,7 @@
                     .then(data => {
                         document.getElementById('editForm').action = `/mypage/gallery/${data.id}`;
                         document.getElementById('title').value = data.title;
-
-                        const imagePreview = document.getElementById('imagePreview');
-                        const previewImage = document.getElementById('previewImage');
-
+                        document.getElementById('price_tag_id').value = data.price_tag_id;
                         // 要素が存在するか確認
                         if (imagePreview && previewImage) {
                             // 画像がある場合の処理
@@ -254,52 +256,45 @@
                                 previewImage.src = `/storage/${data.image_path}`;
                                 previewImage.alt = '画像プレビュー';
                                 previewImage.classList.add('w-full', 'h-full', 'object-cover', 'rounded-lg');
-                                imagePreview.classList.remove('hidden'); // 画像がある場合、プレビューを表示
+                                imagePreview.classList.remove('hidden');
+                                imagePreview.classList.add('flex');
                             } else {
                                 previewImage.src = '';
                                 previewImage.alt = '画像がありません';
                                 imagePreview.classList.add('hidden'); // 画像がない場合は隠す
+                                imagePreview.classList.remove('flex');
                             }
                         } else {
                             console.error('画像プレビューエリアまたは画像要素が見つかりません');
                         }
 
-                        const priceTagSelect = document.getElementById('price_tag_id');
-                        if (data.price_tag_id) {
-                            priceTagSelect.value = data.price_tag_id;
-                        } else {
-                            priceTagSelect.value = '';
-                        }
-
                         if (Array.isArray(data.tags)) {
                             selectedTags = data.tags.map(tag => tag.name);
                             updateSelectedTags();
-                        } else {
-                            console.error("tags is not an array:", data.tags);
                         }
 
                         editModal.classList.remove('hidden');
+                        editModal.classList.add('flex');
                     })
                     .catch(error => {
                         console.error("Error fetching gallery data:", error);
                     });
             }
-            // 画像変更後の処理
-            document.getElementById('image').addEventListener('change', function(event) {
+            // 画像変更の処理
+            imageInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];  // 画像ファイルを取得
-
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const previewImage = document.getElementById('previewImage');
-                        const imagePreview = document.getElementById('imagePreview');
-
                         // 画像プレビュー要素が存在することを確認
-                        if (previewImage && imagePreview) {
+                        if (previewImage) {
                             previewImage.src = e.target.result;  // プレビュー画像を更新
-                            imagePreview.classList.remove('hidden');  // プレビュー表示エリアを表示
+                            imagePreview.classList.remove('hidden');
+                            imagePreview.classList.add('flex');
                         } else {
-                            console.error('画像プレビュー要素が見つかりません');
+                            previewImage.src = '';
+                            imagePreview.classList.add('hidden');
+                            imagePreview.classList.remove('flex');
                         }
                     };
                     reader.readAsDataURL(file);  // ファイルを読み込む
@@ -308,8 +303,9 @@
 
             // 画像をクリックするとファイル選択ダイアログを開く
             document.getElementById('previewImage').addEventListener('click', function() {
-                document.getElementById('image').click();  // input要素をクリックしてファイルダイアログを開く
+                imageInput.click();  // input要素をクリックしてファイルダイアログを開く
             });
+            // 選択しているタグを更新する関数
             function updateSelectedTags() {
                 selectedTagsContainer.innerHTML = "";
                 selectedTags.forEach(tag => {
@@ -330,7 +326,7 @@
                 });
             }
 
-            // タグ候補を表示する
+            // タグ候補リストを表示する
             function showTagSuggestions(input) {
                 fetch(`/tags/search?query=${input}`)
                     .then(response => {
@@ -382,28 +378,6 @@
                 tagSuggestions.classList.add("hidden");
             }
 
-                        // 選択されたタグの表示を更新
-            function updateSelectedTags() {
-                selectedTagsContainer.innerHTML = "";
-                selectedTags.forEach(tag => {
-                    const tagItem = document.createElement("div");
-                    tagItem.textContent = tag;
-                    tagItem.classList.add("bg-[var(--bg-dark)]", "text-[--white]", "px-4", "py-2", "rounded-full", "text-lg", "m-1", "flex", "items-center");
-
-                    // タグ削除ボタン
-                    const removeButton = document.createElement("span");
-                    removeButton.textContent = " ×";
-                    removeButton.classList.add("ml-4", "cursor-pointer");
-                    removeButton.addEventListener("click", function() {
-                        selectedTags = selectedTags.filter(t => t !== tag);
-                        updateSelectedTags();
-                    });
-
-                    tagItem.appendChild(removeButton);
-                    selectedTagsContainer.appendChild(tagItem);
-                });
-            }
-
             tagInput.addEventListener("keydown", function(event) {
                 const suggestionItems = tagSuggestions.children;
 
@@ -449,10 +423,11 @@
                 }
             });
 
-            // クリック以外の場所を押したときに候補を非表示
+            // ページを押したときに候補を非表示
             document.addEventListener("click", function(event) {
                 if (!tagInput.contains(event.target) && !tagSuggestions.contains(event.target)) {
                     tagSuggestions.classList.add("hidden");
+                    selectedTagIndex = -1;
                 }
             });
 
@@ -465,7 +440,6 @@
 
             // 編集フォーム送信時にタグ情報を一緒に送信
             editForm.addEventListener('submit', function(event) {
-                console.log(selectedTags);
                 document.querySelector('#tagInput').value = selectedTags.join(',');
             });
 
@@ -479,9 +453,7 @@
                 $("#togglePosts").click(function() {
                     $("#posts").show();
                     $("#likes").hide();
-                    fetchPosts('user');
                     currentTab = 'posts';
-
                     $(this).removeClass("opacity-50").addClass("underline");
                     $("#toggleLikes").removeClass("underline").addClass("opacity-50");
                 });
@@ -496,7 +468,7 @@
                 });
                 $(window).scroll(function() {
                     if (loading) return;
-                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 200) {
+                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
                         let nextPageLink = (currentTab === 'posts')
                             ? $('#posts-pagination').data('next-url')
                             : $('#likes-pagination').data('next-url');
@@ -510,7 +482,22 @@
 
                 function loadMoreData(url) {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    $.get(url, function(data) {
+                    fetch(url, {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.status === 419 || response.status === 401) {
+                            alert('セッションが切れました。再度ログインしてください。');
+                            window.location.href = '/login';
+                            return;
+                        }
+                        if (!response.ok) throw new Error('通信エラー');
+                        return response.json();
+                    })
+                    .then(data => {
                         if (currentTab === 'posts') {
                             data.userPosts.data.forEach(function(post) {
                                 const postHTML = `
@@ -575,9 +562,9 @@
                         }
 
                         loading = false;
-                    }).fail(function() {
-                        console.log('データの取得に失敗しました。');
-                        loading = false;
+                    })
+                    .catch(error => {
+                        console.error("Error fetching gallery data:", error);
                     });
                 }
 
@@ -637,7 +624,6 @@
 
 
             const likes = document.getElementById('likes');
-
             likes.addEventListener('click', (event) => {
                 if (event.target.closest('.dots-btn')) {
                     event.stopPropagation();
@@ -653,7 +639,7 @@
                     });
                 }
             });
-
+            //ページをクリックしたら詳細を閉じる
             document.addEventListener('click', () => {
                 document.querySelectorAll('.popover').forEach(popover => {
                     popover.classList.add('hidden');

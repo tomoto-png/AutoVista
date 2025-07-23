@@ -25,7 +25,7 @@
     </style>
 </head>
 
-<body class="bg-[var(--bg-light-gray)] relative">
+<body class="bg-[var(--bg-light-gray)] text-[var(--text-main)] relative">
     <div class="absolute w-full h-[60vh] bgcolor -z-10"></div>
 
     <div class="flex items-center justify-center h-screen">
@@ -35,7 +35,7 @@
                 <div class="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
                 <h2
                     class="absolute top-52 left-[73%]
-                    bg-white px-4 py-2 rounded-xl text-2xl font-bold text-[var(--text-main)]">
+                    bg-white px-4 py-2 rounded-xl text-2xl font-bold">
                     register
                 </h2>
                 <a href="{{ route('login') }}"
@@ -45,11 +45,11 @@
                 </a>
             </div>
             <div class="w-full md:w-2/3 p-16 flex flex-col justify-center bg-white">
-                <h1 class="text-4xl text-center mb-10 mt-10 text-[var(--text-main)]">新規登録</h1>
+                <h1 class="text-4xl text-center mb-10 mt-10">新規登録</h1>
                 <form action="{{ route('register') }}" method="POST">
                     @csrf
                     <div class="mb-4">
-                        <label for="email" class="text-[var(--text-main)] text-lg">メールアドレス</label>
+                        <label for="email" class=" text-lg">メールアドレス</label>
                         <div class="relative">
                             <img src="{{ asset('images/mail_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}"
                                 class="absolute top-1/2 left-3 transform -translate-y-[40%] w-6 h-6">
@@ -57,11 +57,11 @@
                                 class="w-full px-10 py-3 mt-1 text-lg border {{ $errors->has('email') ? 'border-red-500' : 'border-[var(--bg-dark)]' }} rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bg-dark)] hover:scale-103 hover:shadow-lg transition-all duration-200" />
                         </div>
                         @error('email')
-                            <div class="text-red-600 text-base text-base mt-1">{{ $message }}</div>
+                            <div class="text-red-600 text-base mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-4 relative">
-                        <label for="password" class="text-[var(--text-main)] text-lg">パスワード</label>
+                        <label for="password" class=" text-lg">パスワード</label>
                         <div class="relative">
                             <img src="{{ asset('images/lock_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}"
                                 class="absolute top-1/2 left-3 transform -translate-y-[40%] w-6 h-6">
@@ -78,7 +78,7 @@
                         @enderror
                     </div>
                     <div class="mb-4">
-                        <label for="password_confirmation" class="text-[var(--text-main)] text-lg">パスワード（確認用）</label>
+                        <label for="password_confirmation" class=" text-lg">パスワード（確認用）</label>
                         <div class="relative">
                             <img src="{{ asset('images/lock_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg') }}"
                                 class="absolute top-1/2 left-3 transform -translate-y-[40%] w-6 h-6">
@@ -90,14 +90,14 @@
                         @enderror
                     </div>
                     <button type="submit"
-                        class="text-[var(--text-main)] bg-[var(--accent-color)]
+                        class="bg-[var(--accent-color)]
                             shadow-xl py-3 text-lg w-full mt-10 mb-10 rounded-xl
                             hover:hover:bg-[var(--button-hover)]">
                         登録
                     </button>
                 </form>
                 <div class="flex justify-center">
-                    <a href="{{ route('top.index') }}" class="text-lg text-[var(--text-main)]">ログインなしで使用</a>
+                    <a href="{{ route('top.index') }}" class="text-lg">ログインなしで使用</a>
                 </div>
             </div>
         </div>

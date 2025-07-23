@@ -70,7 +70,6 @@ class TopController extends Controller
         if (empty($topTags)) {
             return $this->getRandoms($displayedIds);
         }
-        //四つのタグのカウント合計
         $totalCount = $topTags->sum();
         $tagPostCounts = [];
         $remaining = 12;
@@ -137,11 +136,12 @@ class TopController extends Controller
         $userId = Auth::user()->id;
         $request->validate([
             'title' => 'required|max:255',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'required|image|max:2048',
             'price_tag_id' => 'required|exists:price_tags,id',
             'tags' => 'nullable|string',
         ], [
             'title.required' => 'タイトルを入力してください。',
+            'image.required' => '画像は必須です追加してください。',
             'image.image' => '画像形式でアップロードしてください。',
             'image.max' => '画像は10MB以内でアップロードしてください。',
             'price_tag_id.required' => '値段を選択してください。',
@@ -162,9 +162,10 @@ class TopController extends Controller
                         return trim(mb_convert_kana($tagName, "as"));
                     }, explode(',', $request->tags)));
                     // 既存のタグを一括取得
-                    $existingTags = Tag::whereIn('name', $tagNames)->get();
-                    $existingNames = $existingTags->pluck('name')->all();
+                    $existingNames = Tag::whereIn('name', $tagNames)->pluck('name')->toArray();
+
                     $newTagNames = array_diff($tagNames, $existingNames);
+
                     $newTags = array_map(function($name) {
                         return ['name' => $name, 'created_at' => now(), 'updated_at' => now()];
                     }, $newTagNames);
@@ -172,8 +173,8 @@ class TopController extends Controller
                     if (!empty($newTags)) {
                         Tag::insert($newTags);
                     }
-                    $allTags = Tag::whereIn('name', $tagNames)->get();
-                    $gallery->tags()->attach($allTags->pluck('id')->all());
+                    $tagIds = Tag::whereIn('name', $tagNames)->pluck('id')->all();
+                    $gallery->tags()->attach($tagIds);
                 }
             });
         } catch (\Exception $e) {
